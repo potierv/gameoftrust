@@ -28,9 +28,9 @@ def convince_neighbours(node, next_nodes):
 
 
 def main():
-    height = 20
     width = 50
-    game_map = Map(height, width)
+    height = 20
+    game_map = Map(width=width, height=height)
     game_map.generate()
     game_map.link_nodes()
 

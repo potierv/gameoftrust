@@ -1,21 +1,22 @@
-import random
+from dataclasses import dataclass
 import itertools
 import logging
 import math
-import numpy as np
 from node import Node, EBelief
+import numpy as np
+import random
 
 
+@dataclass
 class Map:
-
-    def __init__(self, height, width):
-        self.height = height
-        self.width = width
+    width: int
+    height: int
+    map: list = None
 
     def generate(self):
         array = np.array(np.arange(0, self.height * self.width))
-        self.map = array.reshape(self.height, self.width)
-        self.map = [[Node(str(self.map[i][j])) for j in range(self.width)]
+        array = array.reshape(self.height, self.width)
+        self.map = [[Node(str(array[i][j])) for j in range(self.width)]
                     for i in range(self.height)]
         logging.info(f'Generated map of height {self.height} '
                      f'and width {self.width}, '
