@@ -31,7 +31,7 @@ def main():
         next_nodes = game_map_copy.get_nodes()
 
         round_convinced = 0
-        for node in nodes:
+        for node in nodes.values():
             node_convinced = 0
             if node_changed_belief(node=node, prev_nodes=prev_nodes):
                 node_convinced = node.convince_neighbours(nodes=next_nodes)
