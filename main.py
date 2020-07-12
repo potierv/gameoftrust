@@ -30,25 +30,25 @@ def convince_neighbours(node, next_nodes):
 def main():
     height = 20
     width = 50
-    map = Map(height, width)
-    map.generate()
-    map.link_nodes()
+    game_map = Map(height, width)
+    game_map.generate()
+    game_map.link_nodes()
 
-    prev = copy.deepcopy(map)
+    prev = copy.deepcopy(game_map)
 
-    map.add_belief(EBelief.TRUE, density=0.02, prob=0.5)
-    map.add_belief(EBelief.FALSE, density=0.1, prob=0.25)
+    game_map.add_belief(EBelief.TRUE, density=0.02, prob=0.5)
+    game_map.add_belief(EBelief.FALSE, density=0.1, prob=0.25)
 
-    map.log_state()
-    map.log_map()
+    game_map.log_state()
+    game_map.log_map()
 
     round_count = 0
     round_convinced = 1
     total_convinced = 0
     while round_convinced:
-        next = copy.deepcopy(map)
+        next = copy.deepcopy(game_map)
         prev_nodes = prev.get_nodes()
-        nodes = map.get_nodes()
+        nodes = game_map.get_nodes()
         next_nodes = next.get_nodes()
 
         round_convinced = 0
@@ -58,12 +58,12 @@ def main():
                 node_convinced = convince_neighbours(node, next_nodes)
             round_convinced += node_convinced
 
-        prev = copy.deepcopy(map)
-        map = copy.deepcopy(next)
+        prev = copy.deepcopy(game_map)
+        game_map = copy.deepcopy(next)
         total_convinced += round_convinced
         round_count += 1
-        map.log_state()
-        map.log_map(round_count)
+        game_map.log_state()
+        game_map.log_map(round_count)
 
     logging.info(f'Stabilisation took {round_count} round(s), '
                  f'{total_convinced} node(s) changed belief.')
