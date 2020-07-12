@@ -65,8 +65,8 @@ def main():
         game_map.log_state()
         game_map.log_map(round_count)
 
-    logging.info(f'Stabilisation took {round_count} round(s), '
-                 f'{total_convinced} node(s) changed belief.')
+    logging.info(f"Stabilisation took {round_count} round(s), "
+                 f"{total_convinced} node(s) changed belief.")
 
 
 if __name__ == '__main__':

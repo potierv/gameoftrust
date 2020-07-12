@@ -16,9 +16,9 @@ class Map:
         """Generate the map attribute"""
         self.map = [[Node(str(i * self.width + j)) for j in range(self.width)]
                     for i in range(self.height)]
-        logging.info(f'Generated map of height {self.height} '
-                     f'and width {self.width}, '
-                     f'containing {self.height * self.width} nodes.')
+        logging.info(f"Generated map of height {self.height} "
+                     f"and width {self.width}, "
+                     f"containing {self.height * self.width} nodes.")
 
     def link_nodes(self):
         """Link each node to every node around it"""
@@ -68,12 +68,12 @@ class Map:
         :type round_number: int
         """
         if round_number:
-            log = f'Round {round_number}\n'
+            log = f"Round {round_number}\n"
         else:
-            log = '\n'
+            log = "\n"
 
-        # FIXME We might be able to do that in a better way, idk
-        map_display_lines = [''.join([str(self.map[i][j].state.belief) for j in range(self.width)])
+        # TODO We might be able to do that in a better way, idk
+        map_display_lines = ["".join([str(self.map[i][j].state.belief) for j in range(self.width)])
                              for i in range(self.height)]
 
         log += '\n'.join(map_display_lines)

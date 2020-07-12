@@ -42,10 +42,10 @@ class Node:
 
     def pretty(self):
         if self.neighbours:
-            neighbours = ', '.join([str(n) for n in self.neighbours])
+            neighbours = ", ".join([str(n) for n in self.neighbours])
         else:
-            neighbours = 'None'
-        return f'{self.name}: {self.state}. Links: {neighbours}'
+            neighbours = "None"
+        return f"{self.name}: {self.state}. Links: {neighbours}"
 
     def add_link(self, node):
         if node is self:
