@@ -81,7 +81,7 @@ class Node:
     def add_links(self, *nodes):
         """Link current entity with every node"""
         for node in nodes:
-            self.add_link(node)
+            self.add_link(node=node)
 
 
 def node_changed_belief(node: Node, prev_nodes: [Node]):
@@ -93,7 +93,7 @@ def node_changed_belief(node: Node, prev_nodes: [Node]):
     :return: True if the node changed belief compared to the previous, False if it's the same
     :rtype: bool
     """
-    prev = get_node_by_name(prev_nodes, node.name)
+    prev = get_node_by_name(nodes=prev_nodes, name=node.name)
     return prev.state.belief != node.state.belief
 
 

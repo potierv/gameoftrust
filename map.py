@@ -50,7 +50,7 @@ class Map:
             y = random.randrange(0, self.height)
             # TODO We should probably first check that the element doesn't already
             #  trust that belief. If so, we look for another one
-            self.map[y][x].set_belief(belief, probability)
+            self.map[y][x].set_belief(belief=belief, probability=probability)
 
     def get_nodes(self):
         """Return map nodes"""

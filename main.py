@@ -16,11 +16,11 @@ def calculate_treshold(node, neighbour):
 def convince_neighbours(node, next_nodes):
     convinced_count = 0
     for neighbour in node.neighbours:
-        neighbour = get_node_by_name(next_nodes, neighbour)
+        neighbour = get_node_by_name(nodes=next_nodes, name=neighbour)
         if neighbour.state.belief != node.state.belief:
-            if random_percentage() < calculate_treshold(node, neighbour):
-                next_neighbour = get_node_by_name(next_nodes, neighbour.name)
-                next_neighbour.set_belief(node.state.belief, node.state.probability)
+            if random_percentage() < calculate_treshold(node=node, neighbour=neighbour):
+                next_neighbour = get_node_by_name(nodes=next_nodes, name=neighbour.name)
+                next_neighbour.set_belief(belief=node.state.belief, probability=node.state.probability)
                 convinced_count += 1
     return convinced_count
 
@@ -52,8 +52,8 @@ def main():
         round_convinced = 0
         for node in nodes:
             node_convinced = 0
-            if node_changed_belief(node, prev_nodes):
-                node_convinced = convince_neighbours(node, next_nodes)
+            if node_changed_belief(node=node, prev_nodes=prev_nodes):
+                node_convinced = convince_neighbours(node=node, next_nodes=next_nodes)
             round_convinced += node_convinced
 
         prev = copy.deepcopy(game_map)
