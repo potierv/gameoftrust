@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import copy
-from node import Belief, node_changed_belief, get_node_by_name
+from node import Belief, node_changed_belief
 from map import Map
 
 
@@ -33,7 +33,7 @@ def main():
 
         round_convinced = set()
         for name in prev_round_convinced:
-            node = get_node_by_name(nodes=nodes, name=name)
+            node = nodes[name]
             convinced_nodes = node.convince_neighbours(nodes=next_nodes)
             round_convinced.update(convinced_nodes)
 
