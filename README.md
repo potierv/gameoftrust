@@ -11,8 +11,8 @@ Every node has a state, composed of a belief and and probability. The belief rep
 
 The possible states are:
 - Neutral
-- True
-- False
+- Positive
+- Negative
 
 The game is rythmed by rounds.
 
@@ -24,6 +24,32 @@ A random number between 0.1 and 1.0 is picked, if the node's confidence in X mut
 
 Each node starts in a neutral state with a probability of 0.1.
 
-We then introduce at least one node with a belief different than Neutral and set a desired confidence. This change of states then triggers the start of the game.
+We then introduce at least one node with a belief different than neutral and set a desired confidence. This change of state then triggers the start of the game.
  
-Rounds go on until the nodes states are stable across the across the whole board.
+Rounds go on until the nodes' states are stable across the across the whole board.
+
+# Ideas
+
+Add a node-to-neighbour trust level:
+- The more a node trusts a neighbour, the more likely it is to believe him.
+- When a neighbour believes the node:
+ - The trust level between both nodes inceases
+ - The node's confidence in its belief increases.
+- If a neighbour does not believe the node:
+ - The trust level between both nodes decreases.
+ - The confidence in both's beliefs decreases.
+- The trust level is unidirectional, i.e. A can trust B at 70% even though B might trust A at only 20%.
+
+# UI
+## Step 1: Board
+- Design a file format or protocol to display the board from the game's output
+- Find an interesting way to highlight the following states:
+ - Neutral, ligh grey
+ - Positive, black
+ - Negative, white
+ - Convinced into positive, green
+ - Convinced into negative, red
+## Step 2: Graph
+- Two-dimensiobal graph with nodes and links.
+ - The confidence level influence the node's size
+ - find a way to higlight the node-to-node trust level
