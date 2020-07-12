@@ -39,7 +39,6 @@ def main():
     prev_round_convinced = set(positive_set).union(*negative_set)
     while prev_round_convinced:
         game_map_copy = copy.deepcopy(game_map)
-        prev_nodes = prev.get_nodes()
         nodes = game_map.get_nodes()
         next_nodes = game_map_copy.get_nodes()
 
@@ -49,11 +48,10 @@ def main():
             convinced_nodes = node.convince_neighbours(nodes=next_nodes)
             round_convinced.update(convinced_nodes)
 
-        prev = copy.deepcopy(game_map)
-        game_map = copy.deepcopy(game_map_copy)
+        round_count += 1
         total_convinced += len(round_convinced)
         prev_round_convinced = round_convinced
-        round_count += 1
+        game_map = game_map_copy
         game_map.log_state()
         game_map.log_map(round_count, config.gui)
 
