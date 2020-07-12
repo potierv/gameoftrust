@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import itertools
 import logging
 import math
-from node import Node, EBelief
+from node import Node, Belief
 import random
 
 
@@ -36,10 +36,10 @@ class Map:
                 )
         logging.info(f"Linked nodes together.")
 
-    def introduce_belief(self, belief: EBelief, density: float = 0.01, probability: float = 0.9):
+    def introduce_belief(self, belief: Belief, density: float = 0.01, probability: float = 0.9):
         """Introduce a belief into the map
         :param belief: Belief type
-        :type belief: EBelief
+        :type belief: Belief
         :param density: Density of elements to introduce into the map
         :type density: float
         :param probability: Probability to transmit the belief

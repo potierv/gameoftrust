@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from enum import Enum, auto
 import logging
 
 
@@ -14,14 +16,13 @@ class Belief(Enum):
         }[self]
 
 
+@dataclass
 class NodeState:
-
-    def __init__(self, belief, prob):
-        self.belief = belief
-        self.prob = prob
+    belief: Belief
+    probability: float
 
     def __repr__(self):
-        return f'{self.belief}: {self.prob}'
+        return f'{self.belief}: {self.probability}'
 
 
 class Node:
@@ -63,7 +64,7 @@ class Node:
 
     def set_belief(self, belief, prob):
         self.state.belief = belief
-        self.state.prob = prob
+        self.state.probability = prob
 
     def add_links(self, *nodes):
         for node in nodes:
