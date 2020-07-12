@@ -14,14 +14,22 @@ def calculate_treshold(node, neighbour):
     return node.state.probability * (1.0 - neighbour.state.probability)
 
 
+def engage_conversation(node, nodes, neighbour):
+    treshold = calculate_treshold(node=node, neighbour=neighbour)
+    if random_percentage() < treshold:
+        next_neighbour = get_node_by_name(nodes=nodes, name=neighbour.name)
+        next_neighbour.set_belief(belief=node.state.belief,
+                                  probability=node.state.probability)
+        return True
+    return False
+
+
 def convince_neighbours(node, next_nodes):
     convinced_count = 0
     for neighbour in node.neighbours:
         neighbour = get_node_by_name(nodes=next_nodes, name=neighbour)
         if neighbour.state.belief != node.state.belief:
-            if random_percentage() < calculate_treshold(node=node, neighbour=neighbour):
-                next_neighbour = get_node_by_name(nodes=next_nodes, name=neighbour.name)
-                next_neighbour.set_belief(belief=node.state.belief, probability=node.state.probability)
+            if engage_conversation(node, next_nodes, neighbour) is True:
                 convinced_count += 1
     return convinced_count
 
@@ -29,7 +37,7 @@ def convince_neighbours(node, next_nodes):
 def main():
     width = 50
     height = 20
-    gui = True
+    gui = False
     game_map = Map(width=width, height=height)
     game_map.generate()
     game_map.link_nodes()
@@ -55,7 +63,8 @@ def main():
         for node in nodes:
             node_convinced = 0
             if node_changed_belief(node=node, prev_nodes=prev_nodes):
-                node_convinced = convince_neighbours(node=node, next_nodes=next_nodes)
+                node_convinced = convince_neighbours(node=node,
+                                                     next_nodes=next_nodes)
             round_convinced += node_convinced
 
         prev = copy.deepcopy(game_map)

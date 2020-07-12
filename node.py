@@ -85,12 +85,14 @@ class Node:
 
 
 def node_changed_belief(node: Node, prev_nodes: [Node]):
-    """Compare node belief and node's previous belief and indicates if they are different or not
+    """Compare node belief and node's previous belief and indicates if they
+       are different or not
     :param node: Node
     :type node: Node
     :param prev_nodes: List of previous nodes
     :type prev_nodes: list of Node
-    :return: True if the node changed belief compared to the previous, False if it's the same
+    :return: True if the node changed belief compared to the previous,
+             False if it's the same
     :rtype: bool
     """
     prev = get_node_by_name(nodes=prev_nodes, name=node.name)

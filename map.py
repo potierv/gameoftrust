@@ -37,7 +37,8 @@ class Map:
                 )
         logging.info(f"Linked nodes together.")
 
-    def introduce_belief(self, belief: Belief, density: float = 0.01, probability: float = 0.9):
+    def introduce_belief(self, belief: Belief, density: float = 0.01,
+                         probability: float = 0.9):
         """Introduce a belief into the map
         :param belief: Belief type
         :type belief: Belief
@@ -49,8 +50,8 @@ class Map:
         for i in range(math.ceil(density * self.height * self.width)):
             x = random.randrange(0, self.width)
             y = random.randrange(0, self.height)
-            # TODO We should probably first check that the element doesn't already
-            #  trust that belief. If so, we look for another one
+            # TODO We should probably first check that the element doesn't
+            # already trust that belief. If so, we look for another one
             self.map[y][x].set_belief(belief=belief, probability=probability)
 
     def get_nodes(self):
@@ -63,14 +64,12 @@ class Map:
         for node in self.get_nodes():
             logging.debug(node.get_pretty_display())
 
-
     def as_json(self, round_number: int = None):
         out = json.dumps({
             "round": round_number,
             "map": self.map,
         }, default=lambda o: str(o.state.belief))
         return out
-
 
     def log_map(self, round_number: int = None, gui: bool = False):
         """Log a representation of the map
@@ -83,7 +82,8 @@ class Map:
             log = "\n"
 
         # TODO We might be able to do that in a better way, idk
-        map_display_lines = ["".join([str(self.map[i][j].state.belief) for j in range(self.width)])
+        map_display_lines = ["".join([str(self.map[i][j].state.belief)
+                             for j in range(self.width)])
                              for i in range(self.height)]
 
         log += '\n'.join(map_display_lines)
