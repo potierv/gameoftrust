@@ -1,0 +1,14 @@
+map:
+  width: 50
+  height: 20
+gui: True
+neutral:
+  char: '-'
+positive:
+  char: 'X'
+  density: 0.02
+  confidence: 0.5
+negative:
+  char: '0'
+  density: 0.1
+  confidence: 0.4
