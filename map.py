@@ -36,7 +36,7 @@ class Map:
                 )
         logging.info(f"Linked nodes together.")
 
-    def introduce_belief(self, belief, density=0.01, probability=0.9):
+    def introduce_belief(self, belief: EBelief, density: float = 0.01, probability: float = 0.9):
         """Introduce a belief into the map
         :param belief: Belief type
         :type belief: EBelief
@@ -53,26 +53,29 @@ class Map:
             self.map[y][x].set_belief(belief, probability)
 
     def get_nodes(self):
+        """Return map nodes"""
         return [x for x in itertools.chain(*self.map)]
 
     def log_state(self):
-        nodes = self.get_nodes()
-        for n in nodes:
-            logging.debug(n.pretty())
+        """Log map state"""
+        # Is that only used for a debug purpose ?
+        for node in self.get_nodes():
+            logging.debug(node.pretty())
 
-    def log_map(self, round_number=None):
-        log = '\n'
+    def log_map(self, round_number: int = None):
+        """Log a representation of the map
+        :param round_number: Round number
+        :type round_number: int
+        """
         if round_number:
-            log = f'Round {round_number}' + log
-        for i in range(self.height):
-            for j in range(self.width):
-                belief = self.map[i][j].state.belief
-                if belief == EBelief.NEUTRAL:
-                    log += '-'
-                elif belief == EBelief.TRUE:
-                    log += 'X'
-                else:
-                    log += '0'
-            if i < self.height - 1:
-                log += '\n'
+            log = f'Round {round_number}\n'
+        else:
+            log = '\n'
+
+        # FIXME We might be able to do that in a better way, idk
+        map_display_lines = [''.join([str(self.map[i][j].state.belief) for j in range(self.width)])
+                             for i in range(self.height)]
+
+        log += '\n'.join(map_display_lines)
+
         logging.info(log)
