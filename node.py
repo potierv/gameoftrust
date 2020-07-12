@@ -103,13 +103,13 @@ class Node:
     def convince_neighbours(self, nodes):
         """Engages a conversation with the neighbours whom have different
         belief to the node's one."""
-        convinced_count = 0
-        for neighbour in self.neighbours:
-            neighbour = get_node_by_name(nodes=nodes, name=neighbour)
+        convinced_neighbours = set()
+        for name in self.neighbours:
+            neighbour = get_node_by_name(nodes=nodes, name=name)
             if neighbour.state.belief != self.state.belief:
                 if self.engage_conversation(nodes, neighbour) is True:
-                    convinced_count += 1
-        return convinced_count
+                    convinced_neighbours.add(neighbour.name)
+        return convinced_neighbours
 
 
 def node_changed_belief(node: Node, prev_nodes: [Node]):
