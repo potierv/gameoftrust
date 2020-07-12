@@ -7,6 +7,13 @@ class EBelief(Enum):
     TRUE = auto()
     FALSE = auto()
 
+    def __str__(self):
+        return {
+            self.NEUTRAL: '-',
+            self.TRUE: 'X',
+            self.FALSE: '0',
+        }[self]
+
 
 class NodeState:
 
