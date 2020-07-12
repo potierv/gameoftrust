@@ -1,7 +1,7 @@
 import random
 import logging
 import copy
-from node import Belief, node_changed_state, get_node_by_name
+from node import Belief, node_changed_belief, get_node_by_name
 from map import Map
 
 
@@ -54,7 +54,7 @@ def main():
         round_convinced = 0
         for node in nodes:
             node_convinced = 0
-            if node_changed_state(node, prev_nodes):
+            if node_changed_belief(node, prev_nodes):
                 node_convinced = convince_neighbours(node, next_nodes)
             round_convinced += node_convinced
 
