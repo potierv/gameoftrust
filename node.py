@@ -20,19 +20,17 @@ class Belief(Enum):
 @dataclass
 class NodeState:
     belief: Belief
-    # I'd rename 'probability' to 'belief_trust_rate' or something like that
-    #  to me 'probability' isn't explicit enough
-    probability: float
+    confidence: float
 
     def __repr__(self):
-        return f'{self.belief}: {self.probability}'
+        return f'{self.belief}: {self.confidence}'
 
 
 class Node:
 
-    def __init__(self, name, state=Belief.NEUTRAL, probability=0.01):
+    def __init__(self, name, state=Belief.NEUTRAL, confidence=0.01):
         self.name = name
-        self.state = NodeState(state, probability)
+        self.state = NodeState(state, confidence)
         self.neighbours = set()
         logging.debug(f"Created node {name}.")
         logging.debug(f"{self.get_pretty_display()}.")
@@ -69,15 +67,15 @@ class Node:
             else:
                 logging.debug(f"{self} is already a neighbour of {node}.")
 
-    def set_belief(self, belief, probability):
+    def set_belief(self, belief, confidence):
         """Set belief
         :param belief: Belief type
         :type belief: Belief
-        :param probability: Trust in the belief
-        :type probability: float
+        :param confidence: confidence in the belief
+        :type confidence: float
         """
         self.state.belief = belief
-        self.state.probability = probability
+        self.state.confidence = confidence
 
     def add_links(self, *nodes):
         """Link current entity with every node"""
@@ -87,7 +85,7 @@ class Node:
     def calculate_treshold(self, neighbour):
         """Calculate the treshold at which we consider
          a neighbour is convinced"""
-        return self.state.probability * (1.0 - neighbour.state.probability)
+        return self.state.confidence * (1.0 - neighbour.state.confidence)
 
     def engage_conversation(self, nodes, neighbour):
         """Trying to convince a neighbour by drawing a random number.
@@ -98,13 +96,13 @@ class Node:
         if random_percentage() < treshold:
             next_neighbour = get_node_by_name(nodes=nodes, name=neighbour.name)
             next_neighbour.set_belief(belief=self.state.belief,
-                                      probability=self.state.probability)
+                                      confidence=self.state.confidence)
             return True
         return False
 
     def convince_neighbours(self, nodes):
         """Engages a conversation with the neighbours whom have different
-        belief to the node's one.""""
+        belief to the node's one."""
         convinced_count = 0
         for neighbour in self.neighbours:
             neighbour = get_node_by_name(nodes=nodes, name=neighbour)

@@ -15,8 +15,8 @@ def main():
 
     prev = copy.deepcopy(game_map)
 
-    game_map.introduce_belief(Belief.TRUE, density=0.02, probability=0.5)
-    game_map.introduce_belief(Belief.FALSE, density=0.1, probability=0.25)
+    game_map.introduce_belief(Belief.TRUE, density=0.02, confidence=0.5)
+    game_map.introduce_belief(Belief.FALSE, density=0.1, confidence=0.25)
 
     round_count = 0
     game_map.log_state()
