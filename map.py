@@ -13,6 +13,7 @@ class Map:
     map: list = None
 
     def generate(self):
+        """Generate the map attribute"""
         self.map = [[Node(str(i * self.width + j)) for j in range(self.width)]
                     for i in range(self.height)]
         logging.info(f'Generated map of height {self.height} '
@@ -20,6 +21,7 @@ class Map:
                      f'containing {self.height * self.width} nodes.')
 
     def link_nodes(self):
+        """Link each node to every node around it"""
         for i in range(self.height):
             for j in range(self.width):
                 self.map[i][j].add_links(
@@ -34,12 +36,21 @@ class Map:
                 )
         logging.info(f"Linked nodes together.")
 
-    def add_belief(self, belief, density=0.01, prob=0.9):
-        to_add = int(math.ceil(density * self.height * self.width))
-        for i in range(to_add):
+    def introduce_belief(self, belief, density=0.01, probability=0.9):
+        """Introduce a belief into the map
+        :param belief: Belief type
+        :type belief: EBelief
+        :param density: Density of elements to introduce into the map
+        :type density: float
+        :param probability: Probability to transmit the belief
+        :type probability: float
+        """
+        for i in range(math.ceil(density * self.height * self.width)):
             x = random.randrange(0, self.width)
             y = random.randrange(0, self.height)
-            self.map[y][x].set_belief(belief, prob)
+            # TODO We should probably first check that the element doesn't already
+            #  trust that belief. If so, we look for another one
+            self.map[y][x].set_belief(belief, probability)
 
     def get_nodes(self):
         return [x for x in itertools.chain(*self.map)]

@@ -36,8 +36,8 @@ def main():
 
     prev = copy.deepcopy(game_map)
 
-    game_map.add_belief(EBelief.TRUE, density=0.02, prob=0.5)
-    game_map.add_belief(EBelief.FALSE, density=0.1, prob=0.25)
+    game_map.introduce_belief(EBelief.TRUE, density=0.02, probability=0.5)
+    game_map.introduce_belief(EBelief.FALSE, density=0.1, probability=0.25)
 
     game_map.log_state()
     game_map.log_map()
