@@ -1,7 +1,7 @@
 import random
 import logging
 import copy
-from node import EBelief, node_changed_state, get_node_by_name
+from node import Belief, node_changed_state, get_node_by_name
 from map import Map
 
 
@@ -36,8 +36,8 @@ def main():
 
     prev = copy.deepcopy(game_map)
 
-    game_map.introduce_belief(EBelief.TRUE, density=0.02, probability=0.5)
-    game_map.introduce_belief(EBelief.FALSE, density=0.1, probability=0.25)
+    game_map.introduce_belief(Belief.TRUE, density=0.02, probability=0.5)
+    game_map.introduce_belief(Belief.FALSE, density=0.1, probability=0.25)
 
     game_map.log_state()
     game_map.log_map()

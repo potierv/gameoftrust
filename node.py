@@ -1,8 +1,7 @@
 import logging
-from enum import Enum, auto
 
 
-class EBelief(Enum):
+class Belief(Enum):
     NEUTRAL = auto()
     TRUE = auto()
     FALSE = auto()
@@ -27,7 +26,7 @@ class NodeState:
 
 class Node:
 
-    def __init__(self, name, state=EBelief.NEUTRAL, prob=0.01):
+    def __init__(self, name, state=Belief.NEUTRAL, prob=0.01):
         self.name = name
         self.state = NodeState(state, prob)
         self.neighbours = []
