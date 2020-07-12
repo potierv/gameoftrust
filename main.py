@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import random
 import logging
-import itertools
 import copy
 from node import EBelief, node_changed_state, get_node_by_name
-from map import (generate_map, link_map_nodes, nodes_from_map, log_state,
-                 log_map)
-
+from map import Map
 
 def random_percentage():
     return (random.randrange(1, 101) / 100.0)
@@ -31,23 +28,28 @@ def convince_neighbours(node, next_nodes):
 
 
 def main():
-    size = 20
-    map = generate_map(size)
-    link_map_nodes(map)
+    height = 20
+    width = 50
+    map = Map(height, width)
+    map.generate()
+    map.link_nodes()
 
     prev = copy.deepcopy(map)
-    map[0][0].set_belief(EBelief.FALSE, 0.5)
-    log_state(map)
-    log_map(map)
+
+    map.add_belief(EBelief.TRUE, density=0.02, prob=0.5)
+    map.add_belief(EBelief.FALSE, density=0.1, prob=0.25)
+
+    map.log_state()
+    map.log_map()
 
     round_count = 0
     round_convinced = 1
     total_convinced = 0
     while round_convinced:
         next = copy.deepcopy(map)
-        prev_nodes = nodes_from_map(prev)
-        nodes = nodes_from_map(map)
-        next_nodes = nodes_from_map(next)
+        prev_nodes = prev.get_nodes()
+        nodes = map.get_nodes()
+        next_nodes = next.get_nodes()
 
         round_convinced = 0
         for node in nodes:
@@ -60,8 +62,8 @@ def main():
         map = copy.deepcopy(next)
         total_convinced += round_convinced
         round_count += 1
-        log_state(map)
-        log_map(map, round_count)
+        map.log_state()
+        map.log_map(round_count)
 
     logging.info(f'Stabilisation took {round_count} round(s), '
                  f'{total_convinced} node(s) changed belief.')
