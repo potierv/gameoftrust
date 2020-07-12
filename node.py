@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 import logging
+from utils import random_percentage
 
 
 class Belief(Enum):
@@ -82,6 +83,35 @@ class Node:
         """Link current entity with every node"""
         for node in nodes:
             self.add_link(node=node)
+
+    def calculate_treshold(self, neighbour):
+        """Calculate the treshold at which we consider
+         a neighbour is convinced"""
+        return self.state.probability * (1.0 - neighbour.state.probability)
+
+    def engage_conversation(self, nodes, neighbour):
+        """Trying to convince a neighbour by drawing a random number.
+        If that number is superior the a certain treshold, the neighbour is
+        convinced. Its belief is changed and its confidence is set to the
+        node's confidence."""
+        treshold = self.calculate_treshold(neighbour)
+        if random_percentage() < treshold:
+            next_neighbour = get_node_by_name(nodes=nodes, name=neighbour.name)
+            next_neighbour.set_belief(belief=self.state.belief,
+                                      probability=self.state.probability)
+            return True
+        return False
+
+    def convince_neighbours(self, nodes):
+        """Engages a conversation with the neighbours whom have different
+        belief to the node's one.""""
+        convinced_count = 0
+        for neighbour in self.neighbours:
+            neighbour = get_node_by_name(nodes=nodes, name=neighbour)
+            if neighbour.state.belief != self.state.belief:
+                if self.engage_conversation(nodes, neighbour) is True:
+                    convinced_count += 1
+        return convinced_count
 
 
 def node_changed_belief(node: Node, prev_nodes: [Node]):

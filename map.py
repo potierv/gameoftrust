@@ -65,6 +65,7 @@ class Map:
             logging.debug(node.get_pretty_display())
 
     def as_json(self, round_number: int = None):
+        """Converts the Map object to a json to feed the GUI."""
         out = json.dumps({
             "round": round_number,
             "map": self.map,
