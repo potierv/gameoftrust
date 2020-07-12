@@ -4,24 +4,36 @@ import copy
 from node import Belief, node_changed_belief
 from map import Map
 
+import yaml
+from yaml import Loader
+from munch import munchify
+
+
+def load_config(filename='config.yml'):
+    with open(filename, 'r') as f:
+        config_dict = yaml.load(f, Loader=Loader)
+    munch = munchify(config_dict)
+    munch.map.height = munch.map.get('height', munch.map.width)
+    return munch
+
 
 def main():
-    width = 50
-    height = 20
-    gui = False
-    game_map = Map(width=width, height=height)
+    config = load_config()
+    game_map = Map(width=config.map.width, height=config.map.height)
     game_map.generate()
     game_map.link_nodes()
 
     prev = copy.deepcopy(game_map)
 
-    positive_set = game_map.introduce_belief(Belief.TRUE, density=0.02,
-                                             confidence=0.5)
-    negative_set = game_map.introduce_belief(Belief.FALSE, density=0.1,
-                                             confidence=0.25)
+    positive_set = game_map.introduce_belief(Belief.TRUE,
+                                             density=config.positive.density,
+                                             confidence=config.positive.confidence)
+    negative_set = game_map.introduce_belief(Belief.FALSE,
+                                             density=config.negative.density,
+                                             confidence=config.negative.confidence)
     round_count = 0
     game_map.log_state()
-    game_map.log_map(round_count, gui)
+    game_map.log_map(round_count, config.gui)
 
     total_convinced = 0
     prev_round_convinced = set(positive_set).union(*negative_set)
@@ -43,7 +55,7 @@ def main():
         prev_round_convinced = round_convinced
         round_count += 1
         game_map.log_state()
-        game_map.log_map(round_count, gui)
+        game_map.log_map(round_count, config.gui)
 
     logging.info(f"Stabilisation took {round_count} round(s), "
                  f"{total_convinced} node(s) changed belief.")
