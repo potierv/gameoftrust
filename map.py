@@ -2,8 +2,9 @@ from dataclasses import dataclass
 import itertools
 import logging
 import math
-from node import Node, Belief
+import json
 import random
+from node import Node, Belief
 
 
 @dataclass
@@ -62,7 +63,16 @@ class Map:
         for node in self.get_nodes():
             logging.debug(node.get_pretty_display())
 
-    def log_map(self, round_number: int = None):
+
+    def as_json(self, round_number: int = None):
+        out = json.dumps({
+            "round": round_number,
+            "map": self.map,
+        }, default=lambda o: str(o.state.belief))
+        return out
+
+
+    def log_map(self, round_number: int = None, gui: bool = False):
         """Log a representation of the map
         :param round_number: Round number
         :type round_number: int
@@ -79,3 +89,5 @@ class Map:
         log += '\n'.join(map_display_lines)
 
         logging.info(log)
+        if gui:
+            print(self.as_json(round_number))

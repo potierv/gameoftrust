@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import random
 import logging
 import copy
@@ -28,6 +29,7 @@ def convince_neighbours(node, next_nodes):
 def main():
     width = 50
     height = 20
+    gui = True
     game_map = Map(width=width, height=height)
     game_map.generate()
     game_map.link_nodes()
@@ -37,10 +39,10 @@ def main():
     game_map.introduce_belief(Belief.TRUE, density=0.02, probability=0.5)
     game_map.introduce_belief(Belief.FALSE, density=0.1, probability=0.25)
 
-    game_map.log_state()
-    game_map.log_map()
-
     round_count = 0
+    game_map.log_state()
+    game_map.log_map(round_count, gui)
+
     round_convinced = 1
     total_convinced = 0
     while round_convinced:
@@ -61,7 +63,7 @@ def main():
         total_convinced += round_convinced
         round_count += 1
         game_map.log_state()
-        game_map.log_map(round_count)
+        game_map.log_map(round_count, gui)
 
     logging.info(f"Stabilisation took {round_count} round(s), "
                  f"{total_convinced} node(s) changed belief.")
