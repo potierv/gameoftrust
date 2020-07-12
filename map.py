@@ -3,7 +3,6 @@ import itertools
 import logging
 import math
 from node import Node, EBelief
-import numpy as np
 import random
 
 
@@ -14,9 +13,7 @@ class Map:
     map: list = None
 
     def generate(self):
-        array = np.array(np.arange(0, self.height * self.width))
-        array = array.reshape(self.height, self.width)
-        self.map = [[Node(str(array[i][j])) for j in range(self.width)]
+        self.map = [[Node(str(i * self.width + j)) for j in range(self.width)]
                     for i in range(self.height)]
         logging.info(f'Generated map of height {self.height} '
                      f'and width {self.width}, '
