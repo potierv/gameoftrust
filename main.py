@@ -46,10 +46,10 @@ def main():
     round_convinced = 1
     total_convinced = 0
     while round_convinced:
-        next = copy.deepcopy(game_map)
+        game_map_copy = copy.deepcopy(game_map)
         prev_nodes = prev.get_nodes()
         nodes = game_map.get_nodes()
-        next_nodes = next.get_nodes()
+        next_nodes = game_map_copy.get_nodes()
 
         round_convinced = 0
         for node in nodes:
@@ -59,7 +59,7 @@ def main():
             round_convinced += node_convinced
 
         prev = copy.deepcopy(game_map)
-        game_map = copy.deepcopy(next)
+        game_map = copy.deepcopy(game_map_copy)
         total_convinced += round_convinced
         round_count += 1
         game_map.log_state()
