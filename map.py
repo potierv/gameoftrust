@@ -18,7 +18,8 @@ class Map:
         """Generate the map attribute"""
         self.map = [[Node(str(i * self.width + j)) for j in range(self.width)]
                     for i in range(self.height)]
-        self.nodes = dict([(node.name, node) for node in itertools.chain(*self.map)])
+        self.nodes = dict([(node.name, node)
+                           for node in itertools.chain(*self.map)])
         logging.info(f"Generated map of height {self.height} "
                      f"and width {self.width}, "
                      f"containing {self.height * self.width} nodes.")
@@ -49,12 +50,15 @@ class Map:
         :param confidence: Confidence in the belief
         :type confidence: float
         """
+        changed = set()
         for i in range(math.ceil(density * self.height * self.width)):
             x = random.randrange(0, self.width)
             y = random.randrange(0, self.height)
             # TODO We should probably first check that the element doesn't
             # already trust that belief. If so, we look for another one
             self.map[y][x].set_belief(belief=belief, confidence=confidence)
+            changed.add(self.map[y][x].name)
+        return changed
 
     def get_nodes(self):
         """Return map nodes"""

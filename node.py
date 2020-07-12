@@ -94,7 +94,7 @@ class Node:
         node's confidence."""
         treshold = self.calculate_treshold(neighbour)
         if random_percentage() < treshold:
-            next_neighbour = get_node_by_name(nodes=nodes, name=neighbour.name)
+            next_neighbour = nodes[neighbour.name]
             next_neighbour.set_belief(belief=self.state.belief,
                                       confidence=self.state.confidence)
             return True
@@ -103,13 +103,13 @@ class Node:
     def convince_neighbours(self, nodes):
         """Engages a conversation with the neighbours whom have different
         belief to the node's one."""
-        convinced_count = 0
-        for neighbour in self.neighbours:
-            neighbour = get_node_by_name(nodes=nodes, name=neighbour)
+        convinced_neighbours = set()
+        for name in self.neighbours:
+            neighbour = nodes[name]
             if neighbour.state.belief != self.state.belief:
                 if self.engage_conversation(nodes, neighbour) is True:
-                    convinced_count += 1
-        return convinced_count
+                    convinced_neighbours.add(neighbour.name)
+        return convinced_neighbours
 
 
 def node_changed_belief(node: Node, prev_nodes: [Node]):
@@ -123,17 +123,5 @@ def node_changed_belief(node: Node, prev_nodes: [Node]):
              False if it's the same
     :rtype: bool
     """
-    prev = get_node_by_name(nodes=prev_nodes, name=node.name)
+    prev = prev_nodes[node.name]
     return prev.state.belief != node.state.belief
-
-
-def get_node_by_name(nodes: [Node], name: str):
-    """Return node whick name matches parameters name from nodes list
-    :param nodes: List of nodes to look into
-    :type nodes: list of Node
-    :param name: Name of the node to look for
-    :type name: str
-    :return: Node which name matches parameters
-    :rtype: Node
-    """
-    return nodes[name]
