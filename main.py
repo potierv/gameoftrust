@@ -1,72 +1,70 @@
-#!/usr/bin/env python3
 import random
 import logging
 import copy
-from node import EBelief, node_changed_state, get_node_by_name
+from node import Belief, node_changed_belief, get_node_by_name
 from map import Map
 
+
 def random_percentage():
-    return (random.randrange(1, 101) / 100.0)
+    return random.randrange(1, 101) / 100
 
 
-def calc_treshold(node, neighbour):
-    return (node.state.prob * (1.0 - neighbour.state.prob))
+def calculate_treshold(node, neighbour):
+    return node.state.probability * (1.0 - neighbour.state.probability)
 
 
 def convince_neighbours(node, next_nodes):
     convinced_count = 0
     for neighbour in node.neighbours:
-        neighbour = get_node_by_name(next_nodes, neighbour)
+        neighbour = get_node_by_name(nodes=next_nodes, name=neighbour)
         if neighbour.state.belief != node.state.belief:
-            rand = random_percentage()
-            treshold = calc_treshold(node, neighbour)
-            if rand < treshold:
-                next_neighbour = get_node_by_name(next_nodes, neighbour.name)
-                next_neighbour.set_belief(node.state.belief, node.state.prob)
+            if random_percentage() < calculate_treshold(node=node, neighbour=neighbour):
+                next_neighbour = get_node_by_name(nodes=next_nodes, name=neighbour.name)
+                next_neighbour.set_belief(belief=node.state.belief, probability=node.state.probability)
                 convinced_count += 1
     return convinced_count
 
 
 def main():
-    height = 20
     width = 50
-    map = Map(height, width)
-    map.generate()
-    map.link_nodes()
+    height = 20
+    game_map = Map(width=width, height=height)
+    game_map.generate()
+    game_map.link_nodes()
 
-    prev = copy.deepcopy(map)
+    prev = copy.deepcopy(game_map)
 
-    map.add_belief(EBelief.TRUE, density=0.02, prob=0.5)
-    map.add_belief(EBelief.FALSE, density=0.1, prob=0.25)
+    game_map.introduce_belief(Belief.TRUE, density=0.02, probability=0.5)
+    game_map.introduce_belief(Belief.FALSE, density=0.1, probability=0.25)
 
-    map.log_state()
-    map.log_map()
+    game_map.log_state()
+    game_map.log_map()
 
     round_count = 0
     round_convinced = 1
     total_convinced = 0
     while round_convinced:
-        next = copy.deepcopy(map)
+        game_map_copy = copy.deepcopy(game_map)
         prev_nodes = prev.get_nodes()
-        nodes = map.get_nodes()
-        next_nodes = next.get_nodes()
+        nodes = game_map.get_nodes()
+        next_nodes = game_map_copy.get_nodes()
 
         round_convinced = 0
         for node in nodes:
             node_convinced = 0
-            if node_changed_state(node, prev_nodes):
-                node_convinced = convince_neighbours(node, next_nodes)
+            if node_changed_belief(node=node, prev_nodes=prev_nodes):
+                node_convinced = convince_neighbours(node=node, next_nodes=next_nodes)
             round_convinced += node_convinced
 
-        prev = copy.deepcopy(map)
-        map = copy.deepcopy(next)
+        prev = copy.deepcopy(game_map)
+        game_map = copy.deepcopy(game_map_copy)
         total_convinced += round_convinced
         round_count += 1
-        map.log_state()
-        map.log_map(round_count)
+        game_map.log_state()
+        game_map.log_map(round_count)
 
-    logging.info(f'Stabilisation took {round_count} round(s), '
-                 f'{total_convinced} node(s) changed belief.')
+    logging.info(f"Stabilisation took {round_count} round(s), "
+                 f"{total_convinced} node(s) changed belief.")
 
 
 if __name__ == '__main__':
