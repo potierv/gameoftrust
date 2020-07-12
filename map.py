@@ -12,11 +12,13 @@ class Map:
     width: int
     height: int
     map: list = None
+    nodes: dict = None
 
     def generate(self):
         """Generate the map attribute"""
         self.map = [[Node(str(i * self.width + j)) for j in range(self.width)]
                     for i in range(self.height)]
+        self.nodes = dict([(node.name, node) for node in itertools.chain(*self.map)])
         logging.info(f"Generated map of height {self.height} "
                      f"and width {self.width}, "
                      f"containing {self.height * self.width} nodes.")
@@ -56,12 +58,12 @@ class Map:
 
     def get_nodes(self):
         """Return map nodes"""
-        return [x for x in itertools.chain(*self.map)]
+        return self.nodes
 
     def log_state(self):
         """Log map state"""
         # Is that only used for a debug purpose ?
-        for node in self.get_nodes():
+        for name, node in self.get_nodes().items():
             logging.debug(node.get_pretty_display())
 
     def as_json(self, round_number: int = None):

@@ -136,4 +136,4 @@ def get_node_by_name(nodes: [Node], name: str):
     :return: Node which name matches parameters
     :rtype: Node
     """
-    return list(filter(lambda x: x.name == name, nodes))[0]
+    return nodes[name]
