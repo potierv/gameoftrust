@@ -16,11 +16,10 @@ class Map:
         array = np.array(np.arange(0, self.height * self.width))
         self.map = array.reshape(self.height, self.width)
         self.map = [[Node(str(self.map[i][j])) for j in range(self.width)]
-                     for i in range(self.height)]
+                    for i in range(self.height)]
         logging.info(f'Generated map of height {self.height} '
                      f'and width {self.width}, '
                      f'containing {self.height * self.width} nodes.')
-
 
     def link_nodes(self):
         for i in range(self.height):
@@ -37,7 +36,6 @@ class Map:
                 )
         logging.info(f"Linked nodes together.")
 
-
     def add_belief(self, belief, density=0.01, prob=0.9):
         to_add = int(math.ceil(density * self.height * self.width))
         for i in range(to_add):
@@ -45,16 +43,13 @@ class Map:
             y = random.randrange(0, self.height)
             self.map[y][x].set_belief(belief, prob)
 
-
     def get_nodes(self):
         return [x for x in itertools.chain(*self.map)]
-
 
     def log_state(self):
         nodes = self.get_nodes()
         for n in nodes:
             logging.debug(n.pretty())
-
 
     def log_map(self, round_number=None):
         log = '\n'

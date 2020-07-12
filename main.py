@@ -5,6 +5,7 @@ import copy
 from node import EBelief, node_changed_state, get_node_by_name
 from map import Map
 
+
 def random_percentage():
     return (random.randrange(1, 101) / 100.0)
 
