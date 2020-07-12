@@ -9,7 +9,7 @@ def random_percentage():
     return random.randrange(1, 101) / 100
 
 
-def calc_treshold(node, neighbour):
+def calculate_treshold(node, neighbour):
     return node.state.probability * (1.0 - neighbour.state.probability)
 
 
@@ -18,9 +18,7 @@ def convince_neighbours(node, next_nodes):
     for neighbour in node.neighbours:
         neighbour = get_node_by_name(next_nodes, neighbour)
         if neighbour.state.belief != node.state.belief:
-            rand = random_percentage()
-            treshold = calc_treshold(node, neighbour)
-            if rand < treshold:
+            if random_percentage() < calculate_treshold(node, neighbour):
                 next_neighbour = get_node_by_name(next_nodes, neighbour.name)
                 next_neighbour.set_belief(node.state.belief, node.state.probability)
                 convinced_count += 1
