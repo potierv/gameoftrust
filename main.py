@@ -6,11 +6,11 @@ from map import Map
 
 
 def random_percentage():
-    return (random.randrange(1, 101) / 100.0)
+    return random.randrange(1, 101) / 100.0
 
 
 def calc_treshold(node, neighbour):
-    return (node.state.prob * (1.0 - neighbour.state.prob))
+    return node.state.prob * (1.0 - neighbour.state.prob)
 
 
 def convince_neighbours(node, next_nodes):
