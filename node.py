@@ -20,7 +20,7 @@ class NodeState:
 
 class Node:
 
-    def __init__(self, name, state=EBelief.NEUTRAL, prob=0.1):
+    def __init__(self, name, state=EBelief.NEUTRAL, prob=0.01):
         self.name = name
         self.state = NodeState(state, prob)
         self.neighbours = []

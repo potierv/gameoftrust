@@ -30,6 +30,10 @@ class Map:
                     self.map[i][(j - 1) % self.width],
                     self.map[(i + 1) % self.height][j],
                     self.map[(i - 1) % self.height][j],
+                    self.map[(i + 1) % self.height][(j + 1) % self.width],
+                    self.map[(i + 1) % self.height][(j - 1) % self.width],
+                    self.map[(i - 1) % self.height][(j + 1) % self.width],
+                    self.map[(i - 1) % self.height][(j - 1) % self.width],
                 )
         logging.info(f"Linked nodes together.")
 
