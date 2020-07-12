@@ -60,7 +60,7 @@ class Map:
         """Log map state"""
         # Is that only used for a debug purpose ?
         for node in self.get_nodes():
-            logging.debug(node.pretty())
+            logging.debug(node.get_pretty_display())
 
     def log_map(self, round_number: int = None):
         """Log a representation of the map

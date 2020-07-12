@@ -19,6 +19,8 @@ class Belief(Enum):
 @dataclass
 class NodeState:
     belief: Belief
+    # I'd rename 'probability' to 'belief_trust_rate' or something like that
+    #  to me 'probability' isn't explicit enough
     probability: float
 
     def __repr__(self):
@@ -27,12 +29,12 @@ class NodeState:
 
 class Node:
 
-    def __init__(self, name, state=Belief.NEUTRAL, prob=0.01):
+    def __init__(self, name, state=Belief.NEUTRAL, probability=0.01):
         self.name = name
-        self.state = NodeState(state, prob)
-        self.neighbours = []
+        self.state = NodeState(state, probability)
+        self.neighbours = set()
         logging.debug(f"Created node {name}.")
-        logging.debug(f"{self.pretty()}.")
+        logging.debug(f"{self.get_pretty_display()}.")
 
     def __str__(self):
         return self.name
@@ -40,7 +42,7 @@ class Node:
     def __repr__(self):
         return self.name
 
-    def pretty(self):
+    def get_pretty_display(self):
         if self.neighbours:
             neighbours = ", ".join([str(n) for n in self.neighbours])
         else:
@@ -52,12 +54,12 @@ class Node:
             logging.debug(f'Trying to link {self} to itself.')
         else:
             if node.name not in self.neighbours:
-                self.neighbours.append(node.name)
+                self.neighbours.add(node.name)
                 logging.debug(f"Linked {node} as {self}'s neighbour.")
             else:
                 logging.debug(f"{node} is already a neighbour of {self}.")
             if self.name not in node.neighbours:
-                node.neighbours.append(self.name)
+                node.neighbours.add(self.name)
                 logging.debug(f"Created reciprocal link of {self} to {node}.")
             else:
                 logging.debug(f"{self} is already a neighbour of {node}.")
