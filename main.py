@@ -6,7 +6,7 @@ from map import Map
 
 
 def random_percentage():
-    return random.randrange(1, 101) / 100.0
+    return random.randrange(1, 101) / 100
 
 
 def calc_treshold(node, neighbour):
