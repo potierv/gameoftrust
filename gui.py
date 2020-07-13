@@ -69,9 +69,9 @@ class GameOfTrustUI(tk.Frame):
             if type is GameOfTrustUI.EventType.START:
                 pass
             elif type is GameOfTrustUI.EventType.STOP:
-                self.main.toolbox.timeline['to'] = len(self.states)
-                self.main.toolbox.timeline.set(len(self.states))
-                self.main.toolbox.timeline.grid(row=0, column=0)
+                self.time.grid(row=1, column=0, sticky=tk.W)
+                self.time.timeline['to'] = len(self.states)
+                self.set_timeline(len(self.states))
             elif type is GameOfTrustUI.EventType.STATE:
                 refresh = True
                 self.states.append(state)
@@ -106,23 +106,46 @@ class GameOfTrustUI(tk.Frame):
         menubar.add_cascade(label='File', menu=filemenu)
         self.parent.config(menu=menubar)
 
-        self.main = tk.Frame(self.parent)
-        self.main.grid(row=0, column=0)
-        self.main.toolbox = tk.Frame(self.main)
-        self.main.toolbox.grid(row=0, column=0, sticky=tk.W)
-        self.main.toolbox.timeline = tk.Scale(self.main.toolbox, from_=1, to=1, orient=tk.HORIZONTAL, command=self.set_timeline)
+        self.boardinfo = tk.Frame(self.parent)
+        self.boardinfo.grid(row=0, column=0)
+        self.boardinfo.inspector = tk.Frame(self.boardinfo)
+        self.boardinfo.inspector.grid(row=0, column=0)
+        self.boardinfo.view = tk.Frame(self.boardinfo)
+        self.boardinfo.view.grid(row=0, column=1)
+        self.boardinfo.view.board = tk.Canvas(self.boardinfo.view, width=0, height=0,bg=self.style.board_color)
+        self.boardinfo.view.board.grid(row=0, column=0)
+        self.boardinfo.view.board.cells = []
+        self.boardinfo.view.status = tk.Frame(self.boardinfo.view)
+        self.boardinfo.view.status.grid(row=1, column=0)
+        tk.Button(self.boardinfo.view.status, text='-', command=self.zoom_out).grid(row=0, column=0)
+        tk.Button(self.boardinfo.view.status, text='+', command=self.zoom_in).grid(row=0, column=1)
+        self.time = tk.Frame(self.parent)
+        tk.Button(self.time, text='jump_to_first', command=self.jump_to_first).grid(row=0, column=0)
+        tk.Button(self.time, text='prev_state', command=self.prev_state).grid(row=0, column=1)
+        tk.Button(self.time, text='play_pause', command=self.play_pause).grid(row=0, column=2)
+        tk.Button(self.time, text='next_state', command=self.next_state).grid(row=0, column=3)
+        tk.Button(self.time, text='jump_to_last', command=self.jump_to_last).grid(row=0, column=4)
+        self.time.timeline = tk.Scale(self.time, from_=1, to=1, orient=tk.HORIZONTAL, command=self.set_timeline)
+        self.time.timeline.grid(row=0, column=5)
 
-        self.main.toolbox.zoom_buttons = tk.Frame(self.main.toolbox)
-        self.main.toolbox.zoom_buttons.grid(row=0, column=2)
-        tk.Button(self.main.toolbox.zoom_buttons, text='-', command=self.zoom_out).grid(row=0, column=0)
-        tk.Button(self.main.toolbox.zoom_buttons, text='+', command=self.zoom_in).grid(row=0, column=1)
+    def jump_to_first(self):
+        self.set_timeline(1)
 
-        self.main.board = tk.Canvas(self.main, width=0, height=0,bg=self.style.board_color)
-        self.main.board.grid(row=1, column=0, sticky=tk.W)
-        self.main.board.cells = []
+    def prev_state(self):
+        self.set_timeline(self.current_index) # because set_timeline index is 1-based
+
+    def play_pause(self):
+        pass
+
+    def next_state(self):
+        self.set_timeline(self.current_index + 2) # because set_timeline index is 1-based
+
+    def jump_to_last(self):
+        self.set_timeline(len(self.states))
 
     def set_timeline(self, index):
-        self.current_index = int(index) - 1
+        self.current_index = max(1, min(len(self.states), int(index))) - 1
+        self.time.timeline.set(self.current_index + 1) # it's fine, Scale internal checks prevent from infinite recursion
         self.refresh_grid()
 
     def zoom_out(self):
@@ -138,9 +161,9 @@ class GameOfTrustUI(tk.Frame):
             self.set_grid(self.states[self.current_index].map)
         
     def clear_grid(self):
-        for cell in self.main.board.cells:
-            self.main.board.delete(cell)
-        self.main.board.cells = []
+        for cell in self.boardinfo.view.board.cells:
+            self.boardinfo.view.board.delete(cell)
+        self.boardinfo.view.board.cells = []
 
     def set_grid(self, cells):
         cell_width = self.style.cell_width * self.zoom
@@ -154,7 +177,7 @@ class GameOfTrustUI(tk.Frame):
 
         board_width = cell_width * len(cells[0]) + cell_padding_x * (len(cells[0]) - 1) + board_margin_x * 2
         board_height = cell_height * len(cells) + cell_padding_y * (len(cells) - 1) + board_margin_y * 2
-        self.main.board.config(width=board_width, height=board_height)
+        self.boardinfo.view.board.config(width=board_width, height=board_height)
 
         for row in range(len(cells)):
             for col in range(len(cells[row])):
@@ -163,13 +186,13 @@ class GameOfTrustUI(tk.Frame):
                 bottom = top + cell_height
                 right = left + cell_width
                 fill = self.style.cell_fill_color[cells[row][col]]
-                rect = self.main.board.create_rectangle(left,
-                                                        top,
-                                                        right,
-                                                        bottom,
-                                                        outline=self.style.cell_border_color,
-                                                        fill=fill)
-                self.main.board.cells.append(rect)
+                rect = self.boardinfo.view.board.create_rectangle(left,
+                                                               top,
+                                                               right,
+                                                               bottom,
+                                                               outline=self.style.cell_border_color,
+                                                               fill=fill)
+                self.boardinfo.view.board.cells.append(rect)
 
 if __name__ == '__main__':
     root = tk.Tk()
