@@ -58,7 +58,7 @@ class Map:
                 logging.warn(f"Could not satisfy desired density")
                 break
             random_index = random.randrange(0, len(nodes))
-            random_name = str(nodes[random_index])
+            random_name = nodes[random_index]
             self.nodes[random_name].set_belief(belief=belief,
                                                confidence=confidence)
             del nodes[random_index]
