@@ -8,13 +8,13 @@ import sys
 
 class IOJob(Thread):
 
-    def __init__(self, test):
+    def __init__(self, ui):
         Thread.__init__(self)
-        self.test = test
+        self.ui = ui
 
     def run(self):
         for line in sys.stdin:
-            self.test.feed(line)
+            self.ui.feed(line)
 
 class GameOfTrustUI(tk.Frame):
 
@@ -154,8 +154,8 @@ class GameOfTrustUI(tk.Frame):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    test = GameOfTrustUI(root)
-    io = IOJob(test)
+    ui = GameOfTrustUI(root)
+    io = IOJob(ui)
     io.start()
     root.mainloop()
     io.join()
