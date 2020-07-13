@@ -99,6 +99,13 @@ class GameOfTrustUI(tk.Frame):
 
     def init_ui(self):
         self.parent.title('Game of Trust')
+
+        menubar = tk.Menu(self.parent)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label='Quit', command=self.parent.quit)
+        menubar.add_cascade(label='File', menu=filemenu)
+        self.parent.config(menu=menubar)
+
         self.main = tk.Frame(self.parent)
         self.main.grid(row=0, column=0)
         self.main.toolbox = tk.Frame(self.main)
