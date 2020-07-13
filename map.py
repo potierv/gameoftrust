@@ -51,13 +51,21 @@ class Map:
         :type confidence: float
         """
         changed = set()
+        nodes = [node.name for node in self.nodes.values()
+                 if node.state.belief == Belief.NEUTRAL]
         for i in range(math.ceil(density * self.height * self.width)):
-            x = random.randrange(0, self.width)
-            y = random.randrange(0, self.height)
-            # TODO We should probably first check that the element doesn't
-            # already trust that belief. If so, we look for another one
-            self.map[y][x].set_belief(belief=belief, confidence=confidence)
-            changed.add(self.map[y][x].name)
+            if len(nodes) == 0:
+                logging.warn(f"Could not satisfy desired density")
+                break
+            random_index = random.randrange(0, len(nodes))
+            random_name = nodes[random_index]
+            self.nodes[random_name].set_belief(belief=belief,
+                                               confidence=confidence)
+            del nodes[random_index]
+            changed.add(random_name)
+        achieved_density = len(changed) / (self.width * self. height)
+        logging.info(f"Introduced {len(changed)} {str(belief)} beliefs. "
+                     f"Achieved density: {achieved_density}.")
         return changed
 
     def get_nodes(self):
