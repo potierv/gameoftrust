@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
+import os
 import logging
 import copy
-from node import Belief, node_changed_belief
-from map import Map
-
 import yaml
 from yaml import Loader
 from munch import munchify
+from node import Belief, node_changed_belief
+from map import Map
 
 
-def load_config(filename='config.yml'):
-    with open(filename, 'r') as f:
-        config_dict = yaml.load(f, Loader=Loader)
-    munch = munchify(config_dict)
+def load_config(config_dir='config', default='default.yml', user='user.yml'):
+    # Default configuration
+    config_dir = os.path.join('.', config_dir)
+    with open(os.path.join(config_dir, default), 'r') as f:
+        config = yaml.load(f, Loader=Loader)
+    munch = munchify(config)
+    # User provided configuration
+    user_filename = os.path.join(config_dir, user)
+    if os.path.exists(user_filename):
+        with open(user_filename, 'r') as f:
+            user_config = yaml.load(f, Loader=Loader)
+        config.update(user_config)
+    munch = munchify(config)
     munch.map.height = munch.map.get('height', munch.map.width)
     return munch
 
