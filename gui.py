@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+import json
+import sys
 import tkinter as tk
 from threading import Thread, Lock
 from dataclasses import dataclass
-import json
-import sys
+from enum import Enum, auto
 
 class IOJob(Thread):
 
@@ -13,8 +14,10 @@ class IOJob(Thread):
         self.ui = ui
 
     def run(self):
+        self.ui.start_reading_input()
         for line in sys.stdin:
             self.ui.feed(line)
+        self.ui.stop_reading_input()
 
 class GameOfTrustUI(tk.Frame):
 
@@ -34,6 +37,11 @@ class GameOfTrustUI(tk.Frame):
             '0' : 'chartreuse',
         }
 
+    class EventType(Enum):
+        START = auto()
+        STOP = auto()
+        STATE = auto()
+
     @dataclass
     class State:
         round: int
@@ -45,8 +53,6 @@ class GameOfTrustUI(tk.Frame):
         self.style = GameOfTrustUI.Style()
         self.zoom = 1.0
         self.current_index = 0
-        self.snap_to_last = tk.IntVar()
-        self.snap_to_last.set(1)
         self.states = []
         self.init_ui()
         self.feed_mutex = Lock()
@@ -56,35 +62,49 @@ class GameOfTrustUI(tk.Frame):
     def my_tick(self):
         refresh = False
         self.feed_mutex.acquire()
-        if len(self.feed_list) != 0:
-            refresh = True
-            self.states += self.feed_list
+        events = self.feed_list
         self.feed_list = []
         self.feed_mutex.release()
+        for type, state in events:
+            if type is GameOfTrustUI.EventType.START:
+                pass
+            elif type is GameOfTrustUI.EventType.STOP:
+                self.main.toolbox.timeline['to'] = len(self.states)
+                self.main.toolbox.timeline.set(len(self.states))
+                self.main.toolbox.timeline.grid(row=0, column=0)
+            elif type is GameOfTrustUI.EventType.STATE:
+                refresh = True
+                self.states.append(state)
         if refresh:
-            if self.snap_to_last.get() != 0:
-                self.current_index = len(self.states) - 1
+            self.current_index = len(self.states) - 1
             self.refresh_grid()
         self.after(16, self.my_tick)
+
+    def start_reading_input(self):
+        self.feed_mutex.acquire()
+        self.feed_list.append((GameOfTrustUI.EventType.START, None))
+        self.feed_mutex.release()
+
+    def stop_reading_input(self):
+        self.feed_mutex.acquire()
+        self.feed_list.append((GameOfTrustUI.EventType.STOP, None))
+        self.feed_mutex.release()
 
     def feed(self, line):
         obj = json.loads(line.strip())
         state = GameOfTrustUI.State(obj['round'], obj['map'])
         self.feed_mutex.acquire()
-        self.feed_list.append(state)
+        self.feed_list.append((GameOfTrustUI.EventType.STATE, state))
         self.feed_mutex.release()
 
     def init_ui(self):
         self.parent.title('Game of Trust')
         self.main = tk.Frame(self.parent)
         self.main.grid(row=0, column=0)
-
         self.main.toolbox = tk.Frame(self.main)
         self.main.toolbox.grid(row=0, column=0, sticky=tk.W)
-        tk.Checkbutton(self.main.toolbox, text='Snap to last', variable=self.snap_to_last, command=self.on_snap_to_last).grid(row=0, column=0)
         self.main.toolbox.timeline = tk.Scale(self.main.toolbox, from_=1, to=1, orient=tk.HORIZONTAL, command=self.set_timeline)
-        self.on_snap_to_last()
-        self.main.toolbox.timeline.grid(row=0, column=1)
+
         self.main.toolbox.zoom_buttons = tk.Frame(self.main.toolbox)
         self.main.toolbox.zoom_buttons.grid(row=0, column=2)
         tk.Button(self.main.toolbox.zoom_buttons, text='-', command=self.zoom_out).grid(row=0, column=0)
@@ -93,9 +113,6 @@ class GameOfTrustUI(tk.Frame):
         self.main.board = tk.Canvas(self.main, width=0, height=0,bg=self.style.board_color)
         self.main.board.grid(row=1, column=0, sticky=tk.W)
         self.main.board.cells = []
-
-    def on_snap_to_last(self):
-        self.main.toolbox.timeline['state'] = tk.DISABLED if self.snap_to_last.get() != 0 else tk.NORMAL
 
     def set_timeline(self, index):
         self.current_index = int(index) - 1
@@ -111,11 +128,6 @@ class GameOfTrustUI(tk.Frame):
 
     def refresh_grid(self):
         if len(self.states) != 0:
-            prev = self.main.toolbox.timeline['state']
-            self.main.toolbox.timeline['state'] = tk.NORMAL # because Scale visual isn't refreshed if disabled :(
-            self.main.toolbox.timeline['to'] = len(self.states)
-            self.main.toolbox.timeline.set(self.current_index + 1)
-            self.main.toolbox.timeline['state'] = prev
             self.set_grid(self.states[self.current_index].map)
         
     def clear_grid(self):
