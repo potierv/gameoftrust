@@ -45,7 +45,7 @@ def main():
     game_map.log_map(round_count, config.gui)
 
     total_convinced = 0
-    prev_round_convinced = set(positive_set).union(*negative_set)
+    prev_round_convinced = set(positive_set).union(negative_set)
     while prev_round_convinced:
         game_map_copy = copy.deepcopy(game_map)
         nodes = game_map.get_nodes()
