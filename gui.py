@@ -49,6 +49,7 @@ class GameOfTrustUI(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.style = GameOfTrustUI.Style()
+        self.is_playing = False
         self.zoom = 1.0
         self.current_index = 0
         self.states = []
@@ -56,6 +57,9 @@ class GameOfTrustUI(tk.Frame):
         self.feed_mutex = Lock()
         self.feed_list = []
         self.my_tick()
+
+    def is_at_last_frame(self):
+        return self.current_index == len(self.states) - 1
 
     def my_tick(self):
         self.feed_mutex.acquire()
@@ -71,8 +75,8 @@ class GameOfTrustUI(tk.Frame):
                 self.set_timeline(len(self.states))
             elif type is GameOfTrustUI.EventType.STATE:
                 self.states.append(state)
+                self.current_index = max(0, len(self.states) - 1)
         self.time.timeline['length'] = self.parent.winfo_width() - self.time.buttons.winfo_width() - 8
-        self.current_index = max(0, len(self.states) - 1)
         self.refresh_grid()
         self.after(16, self.my_tick)
 
@@ -119,7 +123,8 @@ class GameOfTrustUI(tk.Frame):
         self.time.buttons = tk.Frame(self.time)
         tk.Button(self.time.buttons, text='|<', command=self.jump_to_first).grid(row=0, column=0)
         tk.Button(self.time.buttons, text='<|', command=self.prev_state).grid(row=0, column=1)
-        tk.Button(self.time.buttons, text='>', command=self.play_pause).grid(row=0, column=2)
+        self.time.buttons.play = tk.Button(self.time.buttons, text='>', command=self.play_pause)
+        self.time.buttons.play.grid(row=0, column=2)
         tk.Button(self.time.buttons, text='|>', command=self.next_state).grid(row=0, column=3)
         tk.Button(self.time.buttons, text='>|', command=self.jump_to_last).grid(row=0, column=4)
         self.time.buttons.grid(row=0, column=0)
@@ -133,7 +138,19 @@ class GameOfTrustUI(tk.Frame):
         self.set_timeline(self.current_index) # because set_timeline index is 1-based
 
     def play_pause(self):
-        pass
+        def play_routine():
+            if self.is_playing:
+                self.next_state()
+                if self.is_at_last_frame():
+                    self.play_pause()
+                else:
+                    self.after(100, play_routine)
+        self.is_playing = not self.is_playing
+        self.time.buttons.play['text'] = '||' if self.is_playing else '>'
+        if self.is_playing:
+            if self.is_at_last_frame():
+                self.jump_to_first()
+            play_routine()
 
     def next_state(self):
         self.set_timeline(self.current_index + 2) # because set_timeline index is 1-based
