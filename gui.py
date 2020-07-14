@@ -52,6 +52,7 @@ class GameOfTrustUI(tk.Frame):
         self.is_playing = False
         self.prev_mouse_x = None
         self.prev_mouse_y = None
+        self.is_canvas_init = False
         self.panning_x = 0
         self.panning_y = 0
         self.zoom = 1.0
@@ -218,8 +219,6 @@ class GameOfTrustUI(tk.Frame):
         self.panning_y = view_h / 2 - grid_h / 2
 
     def set_grid(self, cells):
-        self.boardinfo.view.board.delete(tk.ALL)
-
         board_width = self.parent.winfo_width() - self.boardinfo.inspector.winfo_width()
         board_height = self.parent.winfo_height() - self.boardinfo.view.status.winfo_height() - max(42, self.time.winfo_height()) - 8
         self.boardinfo.view.board.config(width=board_width, height=board_height)
@@ -258,12 +257,18 @@ class GameOfTrustUI(tk.Frame):
 
                 fill = self.style.cell_fill_color[cells[row][col]]
                 outline = fill if self.zoom < 0.25 else self.style.cell_border_color
-                self.boardinfo.view.board.create_rectangle(left,
-                                                           top,
-                                                           right,
-                                                           bottom,
-                                                           outline=outline,
-                                                           fill=fill)
+                if self.is_canvas_init:
+                    i = row * len(cells[row]) + col + 1
+                    self.boardinfo.view.board.itemconfig(i, outline=outline, fill=fill)
+                    self.boardinfo.view.board.coords(i, (left, top, right, bottom))
+                else:
+                    self.boardinfo.view.board.create_rectangle(left,
+                                                               top,
+                                                               right,
+                                                               bottom,
+                                                               outline=outline,
+                                                               fill=fill)
+        self.is_canvas_init = True
 
 if __name__ == '__main__':
     root = tk.Tk()
