@@ -23,9 +23,7 @@ class GameOfTrustUI(tk.Frame):
 
     # http://www.science.smith.edu/dftwiki/index.php/File:TkInterColorCharts.png
     class Style:
-        board_color = 'bisque'
-        board_margin_x = 5
-        board_margin_y = 5
+        board_bg_color = 'bisque'
         cell_width = 20
         cell_height = 20
         cell_padding_x = 3
@@ -60,7 +58,6 @@ class GameOfTrustUI(tk.Frame):
         self.my_tick()
 
     def my_tick(self):
-        refresh = False
         self.feed_mutex.acquire()
         events = self.feed_list
         self.feed_list = []
@@ -69,16 +66,14 @@ class GameOfTrustUI(tk.Frame):
             if type is GameOfTrustUI.EventType.START:
                 pass
             elif type is GameOfTrustUI.EventType.STOP:
-                self.time.grid(row=1, column=0, sticky=tk.W)
+                self.time.grid(row=1, column=0)
                 self.time.timeline['to'] = len(self.states)
                 self.set_timeline(len(self.states))
             elif type is GameOfTrustUI.EventType.STATE:
-                refresh = True
                 self.states.append(state)
-        if refresh:
-            self.current_index = len(self.states) - 1
-            self.refresh_grid()
         self.time.timeline['length'] = self.parent.winfo_width() - self.time.buttons.winfo_width() - 8
+        self.current_index = max(0, len(self.states) - 1)
+        self.refresh_grid()
         self.after(16, self.my_tick)
 
     def start_reading_input(self):
@@ -113,7 +108,7 @@ class GameOfTrustUI(tk.Frame):
         self.boardinfo.inspector.grid(row=0, column=0)
         self.boardinfo.view = tk.Frame(self.boardinfo)
         self.boardinfo.view.grid(row=0, column=1)
-        self.boardinfo.view.board = tk.Canvas(self.boardinfo.view, width=0, height=0,bg=self.style.board_color)
+        self.boardinfo.view.board = tk.Canvas(self.boardinfo.view, width=0, height=0,bg=self.style.board_bg_color)
         self.boardinfo.view.board.grid(row=0, column=0)
         self.boardinfo.view.board.cells = []
         self.boardinfo.view.status = tk.Frame(self.boardinfo.view)
@@ -122,11 +117,11 @@ class GameOfTrustUI(tk.Frame):
         tk.Button(self.boardinfo.view.status, text='+', command=self.zoom_in).grid(row=0, column=1)
         self.time = tk.Frame(self.parent)
         self.time.buttons = tk.Frame(self.time)
-        tk.Button(self.time.buttons, text='jump_to_first', command=self.jump_to_first).grid(row=0, column=0)
-        tk.Button(self.time.buttons, text='prev_state', command=self.prev_state).grid(row=0, column=1)
-        tk.Button(self.time.buttons, text='play_pause', command=self.play_pause).grid(row=0, column=2)
-        tk.Button(self.time.buttons, text='next_state', command=self.next_state).grid(row=0, column=3)
-        tk.Button(self.time.buttons, text='jump_to_last', command=self.jump_to_last).grid(row=0, column=4)
+        tk.Button(self.time.buttons, text='|<', command=self.jump_to_first).grid(row=0, column=0)
+        tk.Button(self.time.buttons, text='<|', command=self.prev_state).grid(row=0, column=1)
+        tk.Button(self.time.buttons, text='>', command=self.play_pause).grid(row=0, column=2)
+        tk.Button(self.time.buttons, text='|>', command=self.next_state).grid(row=0, column=3)
+        tk.Button(self.time.buttons, text='>|', command=self.jump_to_last).grid(row=0, column=4)
         self.time.buttons.grid(row=0, column=0)
         self.time.timeline = tk.Scale(self.time, from_=1, to=1, orient=tk.HORIZONTAL, command=self.set_timeline)
         self.time.timeline.grid(row=0, column=1)
@@ -173,19 +168,17 @@ class GameOfTrustUI(tk.Frame):
         cell_height = self.style.cell_height * self.zoom
         cell_padding_x = self.style.cell_padding_x * self.zoom
         cell_padding_y = self.style.cell_padding_y * self.zoom
-        board_margin_x = self.style.board_margin_x * self.zoom
-        board_margin_y = self.style.board_margin_y * self.zoom
 
         self.clear_grid()
 
-        board_width = cell_width * len(cells[0]) + cell_padding_x * (len(cells[0]) - 1) + board_margin_x * 2
-        board_height = cell_height * len(cells) + cell_padding_y * (len(cells) - 1) + board_margin_y * 2
+        board_width = self.parent.winfo_width() - self.boardinfo.inspector.winfo_width()
+        board_height = self.parent.winfo_height() - self.boardinfo.view.status.winfo_height() - max(42, self.time.winfo_height()) - 8
         self.boardinfo.view.board.config(width=board_width, height=board_height)
 
         for row in range(len(cells)):
             for col in range(len(cells[row])):
-                top = row * (cell_height + cell_padding_x) + board_margin_x
-                left = col * (cell_width + cell_padding_y) + board_margin_y
+                top = row * (cell_height + cell_padding_x)
+                left = col * (cell_width + cell_padding_y)
                 bottom = top + cell_height
                 right = left + cell_width
                 fill = self.style.cell_fill_color[cells[row][col]]
