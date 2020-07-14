@@ -50,6 +50,10 @@ class GameOfTrustUI(tk.Frame):
         self.parent = parent
         self.style = GameOfTrustUI.Style()
         self.is_playing = False
+        self.prev_mouse_x = None
+        self.prev_mouse_y = None
+        self.panning_x = 0
+        self.panning_y = 0
         self.zoom = 1.0
         self.current_index = 0
         self.states = []
@@ -73,9 +77,11 @@ class GameOfTrustUI(tk.Frame):
                 self.time.grid(row=1, column=0)
                 self.time.timeline['to'] = len(self.states)
                 self.set_timeline(len(self.states))
+                self.center_board()
             elif type is GameOfTrustUI.EventType.STATE:
                 self.states.append(state)
                 self.current_index = max(0, len(self.states) - 1)
+                self.center_board()
         self.time.timeline['length'] = self.parent.winfo_width() - self.time.buttons.winfo_width() - 8
         self.refresh_grid()
         self.after(16, self.my_tick)
@@ -97,6 +103,31 @@ class GameOfTrustUI(tk.Frame):
         self.feed_list.append((GameOfTrustUI.EventType.STATE, state))
         self.feed_mutex.release()
 
+    def on_drag_board(self, event):
+        if not (self.prev_mouse_x is None or self.prev_mouse_y is None):
+            delta_x = event.x - self.prev_mouse_x
+            delta_y = event.y - self.prev_mouse_y
+            self.panning_x += delta_x / self.zoom
+            self.panning_y += delta_y / self.zoom
+        self.prev_mouse_x = event.x
+        self.prev_mouse_y = event.y
+
+    def on_release_board(self, event):
+        self.prev_mouse_x = None
+        self.prev_mouse_y = None
+
+    def on_zoom_board(self, event):
+        if event.delta < 0:
+            self.zoom_in()
+        else:
+            self.zoom_out()
+
+    def on_zoom_board_in(self, event):
+        self.zoom_in()
+
+    def on_zoom_board_out(self, event):
+        self.zoom_out()
+
     def init_ui(self):
         self.parent.title('Game of Trust')
 
@@ -113,8 +144,12 @@ class GameOfTrustUI(tk.Frame):
         self.boardinfo.view = tk.Frame(self.boardinfo)
         self.boardinfo.view.grid(row=0, column=1)
         self.boardinfo.view.board = tk.Canvas(self.boardinfo.view, width=0, height=0,bg=self.style.board_bg_color)
+        self.boardinfo.view.board.bind('<B1-Motion>', self.on_drag_board)
+        self.boardinfo.view.board.bind('<ButtonRelease-1>', self.on_release_board)
+        self.boardinfo.view.board.bind('<MouseWheel>', self.on_zoom_board)
+        self.boardinfo.view.board.bind('<Button-4>', self.on_zoom_board_in)
+        self.boardinfo.view.board.bind('<Button-5>', self.on_zoom_board_out)
         self.boardinfo.view.board.grid(row=0, column=0)
-        self.boardinfo.view.board.cells = []
         self.boardinfo.view.status = tk.Frame(self.boardinfo.view)
         self.boardinfo.view.status.grid(row=1, column=0)
         tk.Button(self.boardinfo.view.status, text='-', command=self.zoom_out).grid(row=0, column=0)
@@ -161,32 +196,29 @@ class GameOfTrustUI(tk.Frame):
     def set_timeline(self, index):
         self.current_index = max(1, min(len(self.states), int(index))) - 1
         self.time.timeline.set(self.current_index + 1) # it's fine, Scale internal checks prevent from infinite recursion
-        self.refresh_grid()
 
     def zoom_out(self):
-        self.zoom = max(0.2, self.zoom * 0.9)
-        self.refresh_grid()
+        self.zoom = max(0.05, self.zoom * 0.9091)
         
     def zoom_in(self):
-        self.zoom = min(3, self.zoom * 1.1)
-        self.refresh_grid()
+        self.zoom = min(5, self.zoom * 1.1)
 
     def refresh_grid(self):
         if len(self.states) != 0:
             self.set_grid(self.states[self.current_index].map)
-        
-    def clear_grid(self):
-        for cell in self.boardinfo.view.board.cells:
-            self.boardinfo.view.board.delete(cell)
-        self.boardinfo.view.board.cells = []
+
+    def center_board(self):
+        grid_h = len(self.states[self.current_index].map)
+        grid_h = grid_h * self.style.cell_height + (grid_h - 1) * self.style.cell_padding_y
+        grid_w = len(self.states[self.current_index].map[0])
+        grid_w = grid_w * self.style.cell_width + (grid_w - 1) * self.style.cell_padding_x
+        view_h = self.boardinfo.view.board.winfo_height()
+        view_w = self.boardinfo.view.board.winfo_width()
+        self.panning_x = view_w / 2 - grid_w / 2
+        self.panning_y = view_h / 2 - grid_h / 2
 
     def set_grid(self, cells):
-        cell_width = self.style.cell_width * self.zoom
-        cell_height = self.style.cell_height * self.zoom
-        cell_padding_x = self.style.cell_padding_x * self.zoom
-        cell_padding_y = self.style.cell_padding_y * self.zoom
-
-        self.clear_grid()
+        self.boardinfo.view.board.delete(tk.ALL)
 
         board_width = self.parent.winfo_width() - self.boardinfo.inspector.winfo_width()
         board_height = self.parent.winfo_height() - self.boardinfo.view.status.winfo_height() - max(42, self.time.winfo_height()) - 8
@@ -194,18 +226,44 @@ class GameOfTrustUI(tk.Frame):
 
         for row in range(len(cells)):
             for col in range(len(cells[row])):
-                top = row * (cell_height + cell_padding_x)
-                left = col * (cell_width + cell_padding_y)
-                bottom = top + cell_height
-                right = left + cell_width
+                # local coords
+                top = row * (self.style.cell_height + self.style.cell_padding_x)
+                left = col * (self.style.cell_width + self.style.cell_padding_y)
+                bottom = top + self.style.cell_height
+                right = left + self.style.cell_width
+
+                # panning translation
+                top += self.panning_y
+                left += self.panning_x
+                bottom += self.panning_y
+                right += self.panning_x
+
+                # translate anchor point to origin
+                top -= board_height / 2
+                left -= board_width / 2
+                bottom -= board_height / 2
+                right -= board_width / 2
+
+                # scale
+                top *= self.zoom
+                left *= self.zoom
+                bottom *= self.zoom
+                right *= self.zoom
+
+                # translate anchor point back to original position
+                top += board_height / 2
+                left += board_width / 2
+                bottom += board_height / 2
+                right += board_width / 2
+
                 fill = self.style.cell_fill_color[cells[row][col]]
-                rect = self.boardinfo.view.board.create_rectangle(left,
-                                                               top,
-                                                               right,
-                                                               bottom,
-                                                               outline=self.style.cell_border_color,
-                                                               fill=fill)
-                self.boardinfo.view.board.cells.append(rect)
+                outline = fill if self.zoom < 0.25 else self.style.cell_border_color
+                self.boardinfo.view.board.create_rectangle(left,
+                                                           top,
+                                                           right,
+                                                           bottom,
+                                                           outline=outline,
+                                                           fill=fill)
 
 if __name__ == '__main__':
     root = tk.Tk()
