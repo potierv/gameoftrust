@@ -78,6 +78,7 @@ class GameOfTrustUI(tk.Frame):
         if refresh:
             self.current_index = len(self.states) - 1
             self.refresh_grid()
+        self.time.timeline['length'] = self.parent.winfo_width() - self.time.buttons.winfo_width() - 8
         self.after(16, self.my_tick)
 
     def start_reading_input(self):
@@ -120,13 +121,15 @@ class GameOfTrustUI(tk.Frame):
         tk.Button(self.boardinfo.view.status, text='-', command=self.zoom_out).grid(row=0, column=0)
         tk.Button(self.boardinfo.view.status, text='+', command=self.zoom_in).grid(row=0, column=1)
         self.time = tk.Frame(self.parent)
-        tk.Button(self.time, text='jump_to_first', command=self.jump_to_first).grid(row=0, column=0)
-        tk.Button(self.time, text='prev_state', command=self.prev_state).grid(row=0, column=1)
-        tk.Button(self.time, text='play_pause', command=self.play_pause).grid(row=0, column=2)
-        tk.Button(self.time, text='next_state', command=self.next_state).grid(row=0, column=3)
-        tk.Button(self.time, text='jump_to_last', command=self.jump_to_last).grid(row=0, column=4)
+        self.time.buttons = tk.Frame(self.time)
+        tk.Button(self.time.buttons, text='jump_to_first', command=self.jump_to_first).grid(row=0, column=0)
+        tk.Button(self.time.buttons, text='prev_state', command=self.prev_state).grid(row=0, column=1)
+        tk.Button(self.time.buttons, text='play_pause', command=self.play_pause).grid(row=0, column=2)
+        tk.Button(self.time.buttons, text='next_state', command=self.next_state).grid(row=0, column=3)
+        tk.Button(self.time.buttons, text='jump_to_last', command=self.jump_to_last).grid(row=0, column=4)
+        self.time.buttons.grid(row=0, column=0)
         self.time.timeline = tk.Scale(self.time, from_=1, to=1, orient=tk.HORIZONTAL, command=self.set_timeline)
-        self.time.timeline.grid(row=0, column=5)
+        self.time.timeline.grid(row=0, column=1)
 
     def jump_to_first(self):
         self.set_timeline(1)
