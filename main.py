@@ -4,8 +4,9 @@ import logging
 import yaml
 from yaml import Loader
 from munch import munchify
-from node import Belief, get_all_neighours
+from node import Belief
 from map import Map
+from roundcontroller import RoundController
 
 
 def load_config(config_dir='config', default='default.yml', user='user.yml'):
@@ -49,16 +50,6 @@ def log_round(game_map, config, round_count):
     game_map.log_map(round_count, config.gui)
 
 
-def get_round_convinced(to_convince, prev_round_convinced, nodes):
-    round_convinced = {}
-    for name in to_convince:
-        node = nodes.get(name)
-        next_state = node.get_next_state(nodes, prev_round_convinced)
-        if next_state:
-            round_convinced[name] = next_state
-    return round_convinced
-
-
 def main():
     config = load_config()
     game_map = initialize_map(config)
@@ -69,10 +60,9 @@ def main():
     total_convinced = 0
     log_round(game_map, config, round_count)
     while prev_round_convinced:
-        to_convince = get_all_neighours(nodes, prev_round_convinced)
-
-        round_convinced = get_round_convinced(to_convince,
-                                              prev_round_convinced, nodes)
+        round_convinced = RoundController(
+            nodes,
+            prev_round_convinced).get_round_convinced()
 
         for name in round_convinced:
             nodes.get(name).set_belief(*round_convinced[name])

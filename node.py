@@ -88,8 +88,8 @@ class Node:
         for node in nodes:
             self.add_link(node=node)
 
-    def calculate_treshold(self, neighbour):
-        """Calculate the treshold at which we consider
+    def calculate_threshold(self, neighbour):
+        """Calculate the threshold at which we consider
         a neighbour is convinced"""
         return self.state.confidence * (1.0 - neighbour.state.confidence)
 
@@ -97,78 +97,15 @@ class Node:
         return (node.state.belief != Belief.NEUTRAL
                 and self.state.belief != node.state.belief)
 
-    def get_belief_tresholds(self, nodes, neighbours):
-        tresholds = {}
+    def get_belief_thresholds(self, nodes, neighbours):
+        thresholds = {}
         for name in neighbours:
             neighbour = nodes[name]
             if self.has_different_belief(neighbour):
                 belief = str(neighbour.state.belief)
-                treshold = self.calculate_treshold(neighbour)
-                if not tresholds.get(belief):
-                    tresholds[belief] = [treshold]
+                threshold = self.calculate_threshold(neighbour)
+                if not thresholds.get(belief):
+                    thresholds[belief] = [threshold]
                 else:
-                    tresholds[belief].append(treshold)
-        return tresholds
-
-    def get_next_state_probabilities(self, nodes, neighbours):
-        tresholds = self.get_belief_tresholds(nodes, neighbours)
-
-        chances = {}
-        for belief in tresholds:
-            chances[belief] = functools.reduce(operator.mul, tresholds[belief])
-
-        probabilities = {}
-        if len(chances) == 1:
-            belief = list(chances.keys())[0]
-            probability = list(chances.values())[0]
-            # Neighbour wins
-            probabilities[belief] = probability
-            # Neighbour loses
-            probabilities[str(self.state.belief)] = 1 - probability
-        elif len(chances) == 2:
-            x, y = set(chances.keys())
-            # x wins and y loses
-            probabilities[x] = chances[x] * (1 - chances[y])
-            # y wins and x loses
-            probabilities[y] = chances[y] * (1 - chances[x])
-            # None wins
-            probabilities['remain'] = (1 - chances[x]) * (1 - chances[y])
-            # Both win
-            probabilities[f"{x}:{y}"] = chances[x] * chances[y]
-        return chances, probabilities
-
-    def get_winner(self, chances, probabilities, beliefs):
-        x, y = beliefs.split(':')
-        treshold = (1 - chances[x]) / (1 - chances[x] + 1 - chances[y])
-        r = random_percentage()
-        if r <= treshold:
-            return x, (chances[x] * probabilities[beliefs])
-        return y, (chances[y] * probabilities[beliefs])
-
-    def draw_next_state(self, probabilities):
-        choices, weights = list(), list()
-        for choice, weight in probabilities.items():
-            choices.append(choice)
-            weights.append(weight)
-        return random.choices(choices, weights=weights, k=1)[0]
-
-    def get_next_state(self, nodes, prev_round_convinced):
-        neighbours = prev_round_convinced.intersection(self.neighbours)
-        chances, probabilities = self.get_next_state_probabilities(nodes,
-                                                                   neighbours)
-        if len(chances) > 0 and len(probabilities) > 0:
-            next_state = self.draw_next_state(probabilities)
-            if ':' in next_state:
-                return self.get_winner(chances, probabilities, next_state)
-            if 'remain' in next_state or str(self.state.belief) in next_state:
-                return None
-            return next_state, chances[next_state]
-        return None
-
-
-def get_all_neighours(nodes, names):
-    neighbours = set()
-    for name in names:
-        for neighbour in nodes.get(name).neighbours:
-            neighbours.add(neighbour)
-    return neighbours
+                    thresholds[belief].append(threshold)
+        return thresholds
