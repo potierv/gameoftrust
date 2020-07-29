@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import os
 import logging
-import copy
 import yaml
 from yaml import Loader
 from munch import munchify
-from node import Belief, node_changed_belief
+from node import Belief, get_all_neighours
 from map import Map
 
 
@@ -26,43 +25,62 @@ def load_config(config_dir='config', default='default.yml', user='user.yml'):
     return munch
 
 
-def main():
-    config = load_config()
+def initialize_map(config):
     game_map = Map(width=config.map.width, height=config.map.height)
     game_map.generate()
     game_map.link_nodes()
+    return game_map
 
-    prev = copy.deepcopy(game_map)
 
-    positive_set = game_map.introduce_belief(Belief.TRUE,
-                                             density=config.positive.density,
-                                             confidence=config.positive.confidence)
-    negative_set = game_map.introduce_belief(Belief.FALSE,
-                                             density=config.negative.density,
-                                             confidence=config.negative.confidence)
-    round_count = 0
+def introduce_beliefs(game_map, config):
+    positive_set = game_map.introduce_belief(
+        Belief.TRUE,
+        density=config.positive.density,
+        confidence=config.positive.confidence)
+    negative_set = game_map.introduce_belief(
+        Belief.FALSE,
+        density=config.negative.density,
+        confidence=config.negative.confidence)
+    return set(positive_set).union(negative_set)
+
+
+def log_round(game_map, config, round_count):
     game_map.log_state()
     game_map.log_map(round_count, config.gui)
 
-    total_convinced = 0
-    prev_round_convinced = set(positive_set).union(negative_set)
-    while prev_round_convinced:
-        game_map_copy = copy.deepcopy(game_map)
-        nodes = game_map.get_nodes()
-        next_nodes = game_map_copy.get_nodes()
 
-        round_convinced = set()
-        for name in prev_round_convinced:
-            node = nodes[name]
-            convinced_nodes = node.convince_neighbours(nodes=next_nodes)
-            round_convinced.update(convinced_nodes)
+def get_round_convinced(to_convince, prev_round_convinced, nodes):
+    round_convinced = {}
+    for name in to_convince:
+        node = nodes.get(name)
+        next_state = node.get_next_state(nodes, prev_round_convinced)
+        if next_state:
+            round_convinced[name] = next_state
+    return round_convinced
+
+
+def main():
+    config = load_config()
+    game_map = initialize_map(config)
+    prev_round_convinced = introduce_beliefs(game_map, config)
+    nodes = game_map.get_nodes()
+
+    round_count = 0
+    total_convinced = 0
+    log_round(game_map, config, round_count)
+    while prev_round_convinced:
+        to_convince = get_all_neighours(nodes, prev_round_convinced)
+
+        round_convinced = get_round_convinced(to_convince,
+                                              prev_round_convinced, nodes)
+
+        for name in round_convinced:
+            nodes.get(name).set_belief(*round_convinced[name])
 
         round_count += 1
+        prev_round_convinced = set(round_convinced.keys())
         total_convinced += len(round_convinced)
-        prev_round_convinced = round_convinced
-        game_map = game_map_copy
-        game_map.log_state()
-        game_map.log_map(round_count, config.gui)
+        log_round(game_map, config, round_count)
 
     logging.info(f"Stabilisation took {round_count} round(s), "
                  f"{total_convinced} node(s) changed belief.")

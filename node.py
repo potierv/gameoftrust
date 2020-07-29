@@ -1,6 +1,10 @@
+import copy
+import logging
+import operator
+import functools
+import random
 from dataclasses import dataclass
 from enum import Enum, auto
-import logging
 from utils import random_percentage
 
 
@@ -28,9 +32,10 @@ class NodeState:
 
 class Node:
 
-    def __init__(self, name, state=Belief.NEUTRAL, confidence=0.01):
+    def __init__(self, name, state=Belief.NEUTRAL, confidence=0.9):
         self.name = name
         self.state = NodeState(state, confidence)
+        self.previous_state = NodeState(state, confidence)
         self.neighbours = set()
         logging.debug(f"Created node {name}.")
         logging.debug(f"{self.get_pretty_display()}.")
@@ -74,6 +79,7 @@ class Node:
         :param confidence: confidence in the belief
         :type confidence: float
         """
+        self.previous_state = copy.copy(self.state)
         self.state.belief = belief
         self.state.confidence = confidence
 
@@ -84,44 +90,85 @@ class Node:
 
     def calculate_treshold(self, neighbour):
         """Calculate the treshold at which we consider
-         a neighbour is convinced"""
+        a neighbour is convinced"""
         return self.state.confidence * (1.0 - neighbour.state.confidence)
 
-    def engage_conversation(self, nodes, neighbour):
-        """Trying to convince a neighbour by drawing a random number.
-        If that number is superior the a certain treshold, the neighbour is
-        convinced. Its belief is changed and its confidence is set to the
-        node's confidence."""
-        treshold = self.calculate_treshold(neighbour)
-        if random_percentage() < treshold:
-            next_neighbour = nodes[neighbour.name]
-            next_neighbour.set_belief(belief=self.state.belief,
-                                      confidence=self.state.confidence)
-            return True
-        return False
+    def has_different_belief(self, node):
+        return (node.state.belief != Belief.NEUTRAL
+                and self.state.belief != node.state.belief)
 
-    def convince_neighbours(self, nodes):
-        """Engages a conversation with the neighbours whom have different
-        belief to the node's one."""
-        convinced_neighbours = set()
-        for name in self.neighbours:
+    def get_belief_tresholds(self, nodes, neighbours):
+        tresholds = {}
+        for name in neighbours:
             neighbour = nodes[name]
-            if neighbour.state.belief != self.state.belief:
-                if self.engage_conversation(nodes, neighbour) is True:
-                    convinced_neighbours.add(neighbour.name)
-        return convinced_neighbours
+            if self.has_different_belief(neighbour):
+                belief = str(neighbour.state.belief)
+                treshold = self.calculate_treshold(neighbour)
+                if not tresholds.get(belief):
+                    tresholds[belief] = [treshold]
+                else:
+                    tresholds[belief].append(treshold)
+        return tresholds
+
+    def get_next_state_probabilities(self, nodes, neighbours):
+        tresholds = self.get_belief_tresholds(nodes, neighbours)
+
+        chances = {}
+        for belief in tresholds:
+            chances[belief] = functools.reduce(operator.mul, tresholds[belief])
+
+        probabilities = {}
+        if len(chances) == 1:
+            belief = list(chances.keys())[0]
+            probability = list(chances.values())[0]
+            # Neighbour wins
+            probabilities[belief] = probability
+            # Neighbour loses
+            probabilities[str(self.state.belief)] = 1 - probability
+        elif len(chances) == 2:
+            x, y = set(chances.keys())
+            # x wins and y loses
+            probabilities[x] = chances[x] * (1 - chances[y])
+            # y wins and x loses
+            probabilities[y] = chances[y] * (1 - chances[x])
+            # None wins
+            probabilities['remain'] = (1 - chances[x]) * (1 - chances[y])
+            # Both win
+            probabilities[f"{x}:{y}"] = chances[x] * chances[y]
+        return chances, probabilities
+
+    def get_winner(self, chances, probabilities, beliefs):
+        x, y = beliefs.split(':')
+        treshold = (1 - chances[x]) / (1 - chances[x] + 1 - chances[y])
+        r = random_percentage()
+        if r <= treshold:
+            return x, (chances[x] * probabilities[beliefs])
+        return y, (chances[y] * probabilities[beliefs])
+
+    def draw_next_state(self, probabilities):
+        choices, weights = list(), list()
+        for choice, weight in probabilities.items():
+            choices.append(choice)
+            weights.append(weight)
+        return random.choices(choices, weights=weights, k=1)[0]
+
+    def get_next_state(self, nodes, prev_round_convinced):
+        neighbours = prev_round_convinced.intersection(self.neighbours)
+        chances, probabilities = self.get_next_state_probabilities(nodes,
+                                                                   neighbours)
+        if len(chances) > 0 and len(probabilities) > 0:
+            next_state = self.draw_next_state(probabilities)
+            if ':' in next_state:
+                return self.get_winner(chances, probabilities, next_state)
+            if 'remain' in next_state or str(self.state.belief) in next_state:
+                return None
+            return next_state, chances[next_state]
+        return None
 
 
-def node_changed_belief(node: Node, prev_nodes: [Node]):
-    """Compare node belief and node's previous belief and indicates if they
-       are different or not
-    :param node: Node
-    :type node: Node
-    :param prev_nodes: List of previous nodes
-    :type prev_nodes: list of Node
-    :return: True if the node changed belief compared to the previous,
-             False if it's the same
-    :rtype: bool
-    """
-    prev = prev_nodes[node.name]
-    return prev.state.belief != node.state.belief
+def get_all_neighours(nodes, names):
+    neighbours = set()
+    for name in names:
+        for neighbour in nodes.get(name).neighbours:
+            neighbours.add(neighbour)
+    return neighbours
