@@ -6,7 +6,7 @@ from yaml import Loader
 from munch import munchify
 from node import Belief
 from map import Map
-from roundcontroller import RoundController
+from roundcontroller import GameController
 
 
 def load_config(config_dir='config', default='default.yml', user='user.yml'):
@@ -53,22 +53,17 @@ def log_round(game_map, config, round_count):
 def main():
     config = load_config()
     game_map = initialize_map(config)
-    prev_round_convinced = introduce_beliefs(game_map, config)
-    nodes = game_map.get_nodes()
+    round_convinced = introduce_beliefs(game_map, config)
+    game_controller = GameController(
+        game_map.get_nodes(),
+        round_convinced)
 
     round_count = 0
     total_convinced = 0
     log_round(game_map, config, round_count)
-    while prev_round_convinced:
-        round_convinced = RoundController(
-            nodes,
-            prev_round_convinced).get_round_convinced()
-
-        for name in round_convinced:
-            nodes.get(name).set_belief(*round_convinced[name])
-
+    while round_convinced:
         round_count += 1
-        prev_round_convinced = set(round_convinced.keys())
+        round_convinced = game_controller.next_round()
         total_convinced += len(round_convinced)
         log_round(game_map, config, round_count)
 

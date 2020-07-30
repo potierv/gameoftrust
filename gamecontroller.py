@@ -4,7 +4,7 @@ import random
 from utils import random_percentage
 
 
-class RoundController(object):
+class GameController(object):
     def __init__(self, nodes, prev_round_convinced):
         self.nodes = nodes
         self.prev_round_convinced = prev_round_convinced
@@ -88,4 +88,11 @@ class RoundController(object):
             next_state = self.get_next_node_state(node)
             if next_state:
                 round_convinced[name] = next_state
+        return round_convinced
+
+    def next_round(self):
+        round_convinced = self.get_round_convinced()
+        for name in round_convinced:
+            self.nodes.get(name).set_belief(*round_convinced[name])
+        self.prev_round_convinced = set(round_convinced.keys())
         return round_convinced
