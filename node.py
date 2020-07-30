@@ -1,6 +1,10 @@
+import copy
+import logging
+import operator
+import functools
+import random
 from dataclasses import dataclass
 from enum import Enum, auto
-import logging
 from utils import random_percentage
 
 
@@ -28,9 +32,10 @@ class NodeState:
 
 class Node:
 
-    def __init__(self, name, state=Belief.NEUTRAL, confidence=0.01):
+    def __init__(self, name, state=Belief.NEUTRAL, confidence=0.9):
         self.name = name
         self.state = NodeState(state, confidence)
+        self.previous_state = NodeState(state, confidence)
         self.neighbours = set()
         logging.debug(f"Created node {name}.")
         logging.debug(f"{self.get_pretty_display()}.")
@@ -74,6 +79,7 @@ class Node:
         :param confidence: confidence in the belief
         :type confidence: float
         """
+        self.previous_state = copy.copy(self.state)
         self.state.belief = belief
         self.state.confidence = confidence
 
@@ -82,46 +88,24 @@ class Node:
         for node in nodes:
             self.add_link(node=node)
 
-    def calculate_treshold(self, neighbour):
-        """Calculate the treshold at which we consider
-         a neighbour is convinced"""
+    def calculate_threshold(self, neighbour):
+        """Calculate the threshold at which we consider
+        a neighbour is convinced"""
         return self.state.confidence * (1.0 - neighbour.state.confidence)
 
-    def engage_conversation(self, nodes, neighbour):
-        """Trying to convince a neighbour by drawing a random number.
-        If that number is superior the a certain treshold, the neighbour is
-        convinced. Its belief is changed and its confidence is set to the
-        node's confidence."""
-        treshold = self.calculate_treshold(neighbour)
-        if random_percentage() < treshold:
-            next_neighbour = nodes[neighbour.name]
-            next_neighbour.set_belief(belief=self.state.belief,
-                                      confidence=self.state.confidence)
-            return True
-        return False
+    def has_different_belief(self, node):
+        return (node.state.belief != Belief.NEUTRAL
+                and self.state.belief != node.state.belief)
 
-    def convince_neighbours(self, nodes):
-        """Engages a conversation with the neighbours whom have different
-        belief to the node's one."""
-        convinced_neighbours = set()
-        for name in self.neighbours:
+    def get_belief_thresholds(self, nodes, neighbours):
+        thresholds = {}
+        for name in neighbours:
             neighbour = nodes[name]
-            if neighbour.state.belief != self.state.belief:
-                if self.engage_conversation(nodes, neighbour) is True:
-                    convinced_neighbours.add(neighbour.name)
-        return convinced_neighbours
-
-
-def node_changed_belief(node: Node, prev_nodes: [Node]):
-    """Compare node belief and node's previous belief and indicates if they
-       are different or not
-    :param node: Node
-    :type node: Node
-    :param prev_nodes: List of previous nodes
-    :type prev_nodes: list of Node
-    :return: True if the node changed belief compared to the previous,
-             False if it's the same
-    :rtype: bool
-    """
-    prev = prev_nodes[node.name]
-    return prev.state.belief != node.state.belief
+            if self.has_different_belief(neighbour):
+                belief = str(neighbour.state.belief)
+                threshold = self.calculate_threshold(neighbour)
+                if not thresholds.get(belief):
+                    thresholds[belief] = [threshold]
+                else:
+                    thresholds[belief].append(threshold)
+        return thresholds
